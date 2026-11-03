@@ -1,84 +1,85 @@
 #!/usr/bin/env python3
 """
-Amplía la base de demostración de AvisAR (src/data/avisar-db.ts).
+Amplía la base de demostración de AvisAR (src/data/avisar-db.ts) con vehículos
+tomados de los datos abiertos de la DNRPA.
 
-Agrega marcas y modelos que se comercializan en Argentina, más unidades por
-modelo, campañas de seguridad ficticias (códigos DEMO-), concesionarios para
-todas las marcas y una cuenta demo con vehículos de las marcas nuevas.
+Fuente: Dirección Nacional de los Registros Nacionales de la Propiedad Automotor
+(datos.gob.ar, licencia CC BY 4.0):
+  - Inscripciones iniciales de autos (0 km).
+  - Transferencias de autos (usados).
 
-Es idempotente: si un id ya existe en la base, no lo vuelve a agregar.
-Uso: python3 scripts/ampliar_datos_demo.py
-Datos 100 % sintéticos: patentes, VIN, campañas, personas y concesionarios son ficticios.
+De cada registro se toman SOLO marca, modelo, versión, año de modelo, tipo y
+provincia del registro seccional. Los datos del titular no se usan. El dataset
+no publica dominio ni VIN, por eso las patentes y los VIN son ficticios (con
+formato válido y coherente con el año). Las campañas son ficticias (código DEMO-).
+
+Conserva intactos los vehículos, campañas y cuentas originales de la demo.
+
+Uso:
+  python3 scripts/ampliar_datos_demo.py --altas ALTAS.csv --transferencias T1.csv [T2.csv ...]
+Requiere pandas. Es reproducible: con los mismos archivos genera los mismos datos.
 """
+import argparse
 import json
 import math
 import random
 import re
+import subprocess
 from pathlib import Path
 
-DB = Path(__file__).resolve().parent.parent / "src" / "data" / "avisar-db.ts"
+import pandas as pd
+
+ROOT = Path(__file__).resolve().parent.parent
+DB = ROOT / "src" / "data" / "avisar-db.ts"
 rng = random.Random(20261103)
 
-# ---------------------------------------------------------------------------
-# Modelos nuevos: (marca, modelo, [versiones], [años de las unidades], WMI del VIN)
-# ---------------------------------------------------------------------------
-MODELS = [
-    # Marcas que no estaban en la base
-    ("Jeep", "Renegade", ["Sport 1.8 AT", "Longitude 1.3T AT"], [2017, 2019, 2022], "988"),
-    ("Jeep", "Compass", ["Sport 2.4 AT", "Limited 1.3T AT"], [2018, 2020, 2023], "988"),
-    ("RAM", "1500", ["Laramie 5.7 V8", "Rebel 5.7 V8"], [2019, 2021, 2023], "1C6"),
-    ("Hyundai", "Creta", ["Safety 1.6 AT", "Limited 1.0T AT"], [2018, 2021, 2024], "9BH"),
-    ("Hyundai", "Tucson", ["2.0 4x2 AT", "2.0 4x4 AT"], [2016, 2019, 2022], "KMH"),
-    ("Kia", "Sportage", ["EX 2.0 AT", "GT Line 2.0 AT"], [2017, 2020, 2023], "KNA"),
-    ("Kia", "Seltos", ["EX 1.6 AT", "SX 1.6T AT"], [2021, 2023, 2025], "KNA"),
-    ("Mercedes-Benz", "Sprinter", ["311 CDI Furgón", "515 CDI Combi"], [2015, 2018, 2022], "8AC"),
-    ("Mercedes-Benz", "Clase A", ["A200 Progressive", "A250 AMG Line"], [2019, 2021, 2023], "WDD"),
-    ("BMW", "Serie 3", ["320i Sport Line", "330i M Sport"], [2016, 2019, 2022], "WBA"),
-    ("BMW", "X1", ["sDrive20i", "xDrive25i"], [2017, 2020, 2023], "WBA"),
-    ("Audi", "A3", ["Sportback 1.4 TFSI", "Sedán 2.0 TFSI"], [2015, 2018, 2021], "WAU"),
-    ("Chery", "Tiggo 4", ["Comfort 1.5 MT", "Luxury 1.5 CVT"], [2019, 2022, 2024], "LVV"),
-    ("Haval", "Jolion", ["Deluxe 1.5T DCT", "Supreme HEV"], [2022, 2024, 2025], "LGW"),
-    ("BYD", "Dolphin Mini", ["GL", "GS"], [2025, 2025, 2026], "LGX"),
-    ("BYD", "Song Pro", ["DM-i GL", "DM-i GS"], [2025, 2025, 2026], "LGX"),
-    ("Suzuki", "Swift", ["GL 1.2 MT", "GLX 1.2 CVT"], [2018, 2021, 2024], "MA3"),
-    ("Suzuki", "Vitara", ["GL 1.6 MT", "GLX 1.4T AT"], [2016, 2019, 2022], "TSM"),
-    ("Mitsubishi", "L200", ["GLX 2.4 4x2", "GLS 2.4 4x4 AT"], [2017, 2020, 2023], "MMB"),
-    # Modelos nuevos de marcas que ya estaban
-    ("Chevrolet", "Tracker", ["LT 1.2T", "Premier 1.2T AT"], [2020, 2022, 2024], "9BG"),
-    ("Chevrolet", "Cruze", ["LT 1.4T", "LTZ 1.4T AT"], [2016, 2018, 2021], "8AG"),
-    ("Renault", "Duster", ["Zen 1.6", "Iconic 1.3T CVT"], [2016, 2019, 2022], "8A1"),
-    ("Renault", "Kangoo", ["Furgón 1.6", "Stepway 1.6"], [2018, 2020, 2023], "8A1"),
-    ("Peugeot", "2008", ["Allure 1.6", "GT 1.6T AT"], [2017, 2020, 2023], "8AD"),
-    ("Fiat", "Toro", ["Freedom 1.8 AT", "Volcano 2.0 TD 4x4"], [2017, 2020, 2023], "988"),
-    ("Fiat", "Strada", ["Freedom 1.3 CD", "Volcano 1.3 CVT"], [2021, 2022, 2024], "9BD"),
-    ("Volkswagen", "Taos", ["Comfortline 250 TSI", "Highline 250 TSI"], [2021, 2022, 2024], "8AW"),
-    ("Toyota", "Etios", ["XLS 1.5", "XLS 1.5 AT"], [2014, 2017, 2021], "9BR"),
-    ("Nissan", "Frontier", ["S 2.3 4x2", "PRO-4X 2.3 4x4 AT"], [2017, 2020, 2023], "8AN"),
-    ("Citroën", "C4 Cactus", ["Feel 1.6", "Shine 1.6 AT"], [2018, 2020, 2023], "935"),
-    ("Ford", "Territory", ["SEL 1.5T", "Titanium 1.5T"], [2021, 2023, 2025], "LVS"),
-]
+N_USADOS = 110   # unidades tomadas de transferencias
+N_0KM = 40       # unidades tomadas de inscripciones iniciales
+TOP_FAMILIAS_USADOS = 30
+TOP_FAMILIAS_0KM = 15
 
-# Unidades extra para modelos que ya estaban (marca, modelo, versión, año, WMI)
-EXTRA_UNITS = [
-    ("Toyota", "Hilux", "SRV 2.8 4x4 AT", 2018, "8AJ"),
-    ("Toyota", "Hilux", "DX 2.4 4x2", 2022, "8AJ"),
-    ("Renault", "Sandero", "Stepway 1.6", 2017, "93Y"),
-    ("Renault", "Sandero", "Life 1.6", 2021, "93Y"),
-    ("Nissan", "Versa", "Sense 1.6", 2019, "3N1"),
-    ("Nissan", "Versa", "Exclusive 1.6 CVT", 2023, "3N1"),
-    ("Volkswagen", "Amarok", "Highline 2.0 4x4", 2018, "8AW"),
-    ("Volkswagen", "Amarok", "Extreme V6 3.0", 2022, "8AW"),
-    ("Ford", "Ka", "SE 1.5", 2017, "9BF"),
-    ("Ford", "Ka", "Freestyle 1.5", 2020, "9BF"),
-    ("Chevrolet", "Onix", "LT 1.4", 2018, "9BG"),
-    ("Peugeot", "208", "Feline 1.6 AT", 2021, "8AD"),
-    ("Fiat", "Cronos", "Precision 1.8 AT", 2019, "8AP"),
-    ("Ford", "Ranger", "XLT 3.2 4x4 AT", 2020, "8AF"),
-]
+TIPOS_LIVIANOS = r"^(SEDAN|RURAL|TODO TERRENO|COUPE|CONVERTIBLE)"  # solo autos y SUV: sin pick-ups, furgones ni utilitarios
 
-# ---------------------------------------------------------------------------
-# Campañas ficticias: (marca, modelo, desde, hasta, plantilla de falla, riesgo)
-# ---------------------------------------------------------------------------
+# Modelos de la demo original: no se les agregan campañas nuevas, para no alterar los escenarios.
+MODELOS_ORIGINALES = {
+    ("Toyota", "Corolla"), ("Ford", "Focus"), ("Volkswagen", "Gol"), ("Toyota", "Yaris"), ("Ford", "Ranger"),
+    ("Renault", "Sandero"), ("Honda", "Civic"), ("Fiat", "Cronos"), ("Toyota", "Hilux"), ("Peugeot", "208"),
+    ("Chevrolet", "Onix"), ("Nissan", "Versa"), ("Citroën", "C3"), ("Volkswagen", "Amarok"), ("Ford", "Ka"),
+}
+
+MARCAS = {
+    "VOLKSWAGEN": "Volkswagen", "MERCEDES BENZ": "Mercedes-Benz", "CITROEN": "Citroën", "CHEVROLET": "Chevrolet",
+    "TOYOTA": "Toyota", "FORD": "Ford", "FIAT": "Fiat", "RENAULT": "Renault", "PEUGEOT": "Peugeot",
+    "NISSAN": "Nissan", "HONDA": "Honda", "JEEP": "Jeep", "AUDI": "Audi", "SUZUKI": "Suzuki", "CHERY": "Chery",
+    "HYUNDAI": "Hyundai", "KIA": "Kia", "RAM": "RAM", "MITSUBISHI": "Mitsubishi", "BAIC": "BAIC", "BYD": "BYD",
+    "HAVAL": "Haval", "MG": "MG", "BMW": "BMW", "JETOUR": "Jetour", "CHANGAN": "Changan", "DODGE": "Dodge",
+}
+
+# Nombres de modelo como se escriben comercialmente (DNRPA los publica en mayúsculas)
+NOMBRES = {
+    "ECOSPORT": "EcoSport", "HR-V": "HR-V", "WR-V": "WR-V", "SW4": "SW4", "S10": "S10", "T-CROSS": "T-Cross",
+    "F-100": "F-100", "BJ30E": "BJ30E", "X55E": "X55E", "ZS": "ZS", "H6": "H6", "CS55": "CS55", "T1": "T1",
+    "HB 20": "HB20", "HB 20S": "HB20S", "HB20": "HB20", "HB20S": "HB20S", "GLC": "GLC", "GLA": "GLA", "QQ": "QQ", "X55": "X55", "X70": "X70", "K3": "K3", "CR-V": "CR-V", "RAV4": "RAV4", "SW4": "SW4", "TIGGO 4": "Tiggo 4", "TIGGO 7": "Tiggo 7", "TIGGO 2": "Tiggo 2", "TIGGO 8": "Tiggo 8",
+    "X-TRAIL": "X-Trail", "C4": "C4", "C3": "C3", "208": "208", "207": "207", "206": "206", "308": "308",
+    "307": "307", "408": "408", "2008": "2008", "3008": "3008", "500": "500",
+}
+
+WMI = {
+    "Volkswagen": "8AW", "Ford": "8AF", "Renault": "93Y", "Chevrolet": "9BG", "Fiat": "8AP", "Toyota": "8AJ",
+    "Peugeot": "8AD", "Citroën": "935", "Mercedes-Benz": "8AC", "Nissan": "3N1", "Honda": "93H", "Jeep": "988",
+    "Audi": "WAU", "Suzuki": "MA3", "Chery": "LVV", "Hyundai": "9BH", "Kia": "KNA", "RAM": "3C6",
+    "Mitsubishi": "MMB", "BAIC": "LNB", "BYD": "LGX", "Haval": "LGW", "MG": "LSJ", "BMW": "WBA",
+    "Jetour": "LVT", "Changan": "LS5", "Dodge": "3D4",
+}
+
+CONTACTS = {
+    "Ford": "0800-000-0101", "Toyota": "0800-000-0102", "Volkswagen": "0800-000-0103", "Fiat": "0800-000-0104",
+    "Peugeot": "0800-000-0105", "Chevrolet": "0800-000-0106", "Honda": "0800-000-0107", "Citroën": "0800-000-0108",
+}
+
+ELECTRICOS = {"BYD", "BAIC", "Leapmotor"}
+UTILITARIOS = {"Kangoo", "Partner", "Berlingo", "Sprinter", "Fiorino", "Transit", "Master", "Expert", "Jumpy"}
+
 FAULTS = {
     "airbag_inflador": ("Reemplazo del inflador del airbag del conductor", "Inflador del airbag del conductor",
         "El inflador podría activarse con una presión mayor a la prevista.",
@@ -169,121 +170,98 @@ FAULTS = {
         "Con lluvia, la visibilidad del conductor se reduce de forma significativa.",
         "Pedí turno en un concesionario oficial. El reemplazo es gratuito y demora 1 hora."),
 }
-
-CAMPAIGNS = [
-    ("Jeep", "Renegade", 2016, 2019, "combustible_fuga", "CRÍTICO"),
-    ("Jeep", "Renegade", 2019, 2022, "freno_mano", "ALTO"),
-    ("Jeep", "Compass", 2017, 2021, "airbag_sensor", "ALTO"),
-    ("Jeep", "Compass", 2022, 2024, "camara_retroceso", "MEDIO"),
-    ("RAM", "1500", 2019, 2022, "airbag_inflador", "CRÍTICO"),
-    ("RAM", "1500", 2021, 2024, "rueda_tuercas", "ALTO"),
-    ("Hyundai", "Creta", 2017, 2020, "electrico_arnes", "CRÍTICO"),
-    ("Hyundai", "Creta", 2021, 2024, "cinturon_pretensor", "ALTO"),
-    ("Hyundai", "Tucson", 2016, 2020, "frenos_servo", "ALTO"),
-    ("Kia", "Sportage", 2017, 2021, "electrico_arnes", "CRÍTICO"),
-    ("Kia", "Sportage", 2020, 2023, "luces_faros", "MEDIO"),
-    ("Kia", "Seltos", 2021, 2024, "direccion_asistencia", "ALTO"),
-    ("Mercedes-Benz", "Sprinter", 2015, 2019, "puerta_corrediza", "ALTO"),
-    ("Mercedes-Benz", "Sprinter", 2018, 2023, "frenos_canieria", "CRÍTICO"),
-    ("Mercedes-Benz", "Clase A", 2019, 2022, "camara_retroceso", "MEDIO"),
-    ("BMW", "Serie 3", 2016, 2019, "electrico_arnes", "CRÍTICO"),
-    ("BMW", "Serie 3", 2019, 2022, "cinturon_pretensor", "ALTO"),
-    ("BMW", "X1", 2017, 2021, "combustible_fuga", "CRÍTICO"),
-    ("Audi", "A3", 2015, 2019, "airbag_inflador", "CRÍTICO"),
-    ("Audi", "A3", 2018, 2021, "freno_mano", "MEDIO"),
-    ("Chery", "Tiggo 4", 2019, 2023, "suspension_brazo", "ALTO"),
-    ("Chery", "Tiggo 4", 2022, 2024, "luces_faros", "MEDIO"),
-    ("Haval", "Jolion", 2022, 2024, "direccion_asistencia", "ALTO"),
-    ("BYD", "Dolphin Mini", 2025, 2026, "cargador", "ALTO"),
-    ("BYD", "Song Pro", 2025, 2025, "bateria_at", "CRÍTICO"),
-    ("Suzuki", "Swift", 2018, 2022, "combustible_bomba", "CRÍTICO"),
-    ("Suzuki", "Vitara", 2016, 2020, "limpiaparabrisas", "MEDIO"),
-    ("Mitsubishi", "L200", 2017, 2021, "suspension_brazo", "CRÍTICO"),
-    ("Mitsubishi", "L200", 2020, 2023, "freno_mano", "ALTO"),
-    ("Chevrolet", "Tracker", 2020, 2023, "butaca_riel", "ALTO"),
-    ("Chevrolet", "Cruze", 2016, 2019, "motor_correa", "CRÍTICO"),
-    ("Renault", "Duster", 2016, 2020, "frenos_servo", "ALTO"),
-    ("Renault", "Kangoo", 2018, 2022, "puerta_corrediza", "ALTO"),
-    ("Peugeot", "2008", 2017, 2021, "electrico_arnes", "CRÍTICO"),
-    ("Fiat", "Toro", 2017, 2021, "direccion_cremallera", "CRÍTICO"),
-    ("Fiat", "Strada", 2021, 2023, "capot", "MEDIO"),
-    ("Volkswagen", "Taos", 2021, 2023, "airbag_sensor", "ALTO"),
-    ("Toyota", "Etios", 2014, 2018, "airbag_inflador", "CRÍTICO"),
-    ("Nissan", "Frontier", 2017, 2021, "rueda_tuercas", "CRÍTICO"),
-    ("Citroën", "C4 Cactus", 2018, 2021, "frenos_canieria", "ALTO"),
-    ("Ford", "Territory", 2021, 2024, "camara_retroceso", "MEDIO"),
-    # Más fallas para modelos que ya estaban (el Corolla queda sin campañas: es el escenario "Sin recalls")
-    ("Toyota", "Hilux", 2016, 2019, "airbag_inflador", "CRÍTICO"),
-    ("Toyota", "Hilux", 2020, 2023, "frenos_canieria", "ALTO"),
-    ("Renault", "Sandero", 2016, 2019, "electrico_arnes", "ALTO"),
-    ("Nissan", "Versa", 2018, 2021, "cinturon_pretensor", "ALTO"),
-    ("Nissan", "Versa", 2022, 2024, "luces_faros", "MEDIO"),
-    ("Volkswagen", "Amarok", 2017, 2020, "rueda_tuercas", "CRÍTICO"),
-    ("Volkswagen", "Amarok", 2021, 2023, "freno_mano", "ALTO"),
-    ("Ford", "Ka", 2016, 2019, "butaca_riel", "ALTO"),
-    ("Ford", "Ka", 2019, 2021, "combustible_bomba", "CRÍTICO"),
-    ("Ford", "Ranger", 2020, 2022, "direccion_cremallera", "ALTO"),
-    ("Chevrolet", "Onix", 2018, 2020, "frenos_servo", "CRÍTICO"),
-    ("Peugeot", "208", 2021, 2023, "airbag_sensor", "ALTO"),
-    ("Fiat", "Cronos", 2019, 2022, "limpiaparabrisas", "MEDIO"),
-]
-
-# Teléfonos 0800 ficticios por marca (las marcas que ya estaban conservan el suyo)
-CONTACTS = {
-    "Ford": "0800-000-0101", "Toyota": "0800-000-0102", "Volkswagen": "0800-000-0103", "Fiat": "0800-000-0104",
-    "Peugeot": "0800-000-0105", "Chevrolet": "0800-000-0106", "Honda": "0800-000-0107", "Citroën": "0800-000-0108",
-    "Renault": "0800-000-0109", "Nissan": "0800-000-0110", "Jeep": "0800-000-0111", "RAM": "0800-000-0112",
-    "Hyundai": "0800-000-0113", "Kia": "0800-000-0114", "Mercedes-Benz": "0800-000-0115", "BMW": "0800-000-0116",
-    "Audi": "0800-000-0117", "Chery": "0800-000-0118", "Haval": "0800-000-0119", "BYD": "0800-000-0120",
-    "Suzuki": "0800-000-0121", "Mitsubishi": "0800-000-0122",
-}
-
 FAULT_CODE = {
     "airbag_inflador": "INFL", "airbag_sensor": "SENS", "frenos_servo": "SERVO", "frenos_canieria": "FRENOS",
-    "freno_mano": "FMANO", "direccion_cremallera": "DIREC", "direccion_asistencia": "DIREC", "combustible_fuga": "COMB",
-    "combustible_bomba": "COMB", "cinturon_pretensor": "CINT", "suspension_brazo": "SUSP", "rueda_tuercas": "RUEDA",
-    "electrico_arnes": "ARNES", "motor_correa": "DISTR", "luces_faros": "FAROS", "camara_retroceso": "CAMARA",
-    "puerta_corrediza": "PUERTA", "bateria_at": "BATAT", "cargador": "CARGA", "capot": "CAPOT",
-    "butaca_riel": "BUTACA", "limpiaparabrisas": "LIMP",
+    "freno_mano": "FMANO", "direccion_cremallera": "DIREC", "direccion_asistencia": "DIREC",
+    "combustible_fuga": "COMB", "combustible_bomba": "COMB", "cinturon_pretensor": "CINT",
+    "suspension_brazo": "SUSP", "rueda_tuercas": "RUEDA", "electrico_arnes": "ARNES", "motor_correa": "DISTR",
+    "luces_faros": "FAROS", "camara_retroceso": "CAMARA", "puerta_corrediza": "PUERTA", "bateria_at": "BATAT",
+    "cargador": "CARGA", "capot": "CAPOT", "butaca_riel": "BUTACA", "limpiaparabrisas": "LIMP",
 }
+FALLAS_COMBUSTION = [k for k in FAULTS if k not in ("bateria_at", "cargador", "puerta_corrediza")]
+FALLAS_ELECTRICOS = ["bateria_at", "cargador", "freno_mano", "airbag_sensor", "camara_retroceso", "suspension_brazo"]
+MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre",
+          "noviembre", "diciembre"]
 
-MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
-
-# ---------------------------------------------------------------------------
-# Concesionarios ficticios en avenidas reales de CABA y GBA (coordenadas aproximadas)
-# ---------------------------------------------------------------------------
+# Concesionarios ficticios sobre avenidas reales de CABA y GBA (coordenadas aproximadas)
 LOCATIONS = [
-    ("Av. Cabildo 1800", "Belgrano", -34.5655, -58.4530),
-    ("Av. Santa Fe 2900", "Palermo", -34.5890, -58.4060),
-    ("Av. Corrientes 5200", "Villa Crespo", -34.5985, -58.4385),
-    ("Av. Rivadavia 4800", "Caballito", -34.6185, -58.4325),
-    ("Av. del Libertador 6500", "Belgrano", -34.5560, -58.4470),
-    ("Av. Warnes 1500", "Villa Crespo", -34.5950, -58.4520),
-    ("Av. Maipú 1500", "Vicente López", -34.5235, -58.4795),
-    ("Av. Mitre 600", "Avellaneda", -34.6625, -58.3650),
-    ("Av. Rivadavia 15000", "Ramos Mejía", -34.6430, -58.5650),
-    ("Av. del Libertador 13000", "Martínez", -34.4920, -58.5030),
-    ("Av. San Juan 3000", "San Cristóbal", -34.6235, -58.4050),
-    ("Av. Álvarez Thomas 1500", "Colegiales", -34.5760, -58.4570),
-    ("Av. Córdoba 6000", "Chacarita", -34.5850, -58.4440),
-    ("Av. Monroe 3000", "Coghlan", -34.5640, -58.4690),
-    ("Av. La Plata 1500", "Boedo", -34.6330, -58.4250),
-    ("Av. Gaona 3500", "Floresta", -34.6190, -58.4780),
-    ("Av. Triunvirato 4000", "Villa Urquiza", -34.5750, -58.4870),
-    ("Av. Pueyrredón 1000", "Balvanera", -34.6050, -58.4050),
-    ("Av. Hipólito Yrigoyen 8000", "Banfield", -34.7440, -58.3950),
-    ("Av. Belgrano 2500", "Balvanera", -34.6135, -58.4025),
+    ("Av. Cabildo 1800", "Belgrano", -34.5655, -58.4530), ("Av. Santa Fe 2900", "Palermo", -34.5890, -58.4060),
+    ("Av. Corrientes 5200", "Villa Crespo", -34.5985, -58.4385), ("Av. Rivadavia 4800", "Caballito", -34.6185, -58.4325),
+    ("Av. del Libertador 6500", "Belgrano", -34.5560, -58.4470), ("Av. Warnes 1500", "Villa Crespo", -34.5950, -58.4520),
+    ("Av. Maipú 1500", "Vicente López", -34.5235, -58.4795), ("Av. Mitre 600", "Avellaneda", -34.6625, -58.3650),
+    ("Av. Rivadavia 15000", "Ramos Mejía", -34.6430, -58.5650), ("Av. del Libertador 13000", "Martínez", -34.4920, -58.5030),
+    ("Av. San Juan 3000", "San Cristóbal", -34.6235, -58.4050), ("Av. Álvarez Thomas 1500", "Colegiales", -34.5760, -58.4570),
+    ("Av. Córdoba 6000", "Chacarita", -34.5850, -58.4440), ("Av. Monroe 3000", "Coghlan", -34.5640, -58.4690),
+    ("Av. La Plata 1500", "Boedo", -34.6330, -58.4250), ("Av. Gaona 3500", "Floresta", -34.6190, -58.4780),
+    ("Av. Triunvirato 4000", "Villa Urquiza", -34.5750, -58.4870), ("Av. Pueyrredón 1000", "Balvanera", -34.6050, -58.4050),
+    ("Av. Hipólito Yrigoyen 8000", "Banfield", -34.7440, -58.3950), ("Av. Belgrano 2500", "Balvanera", -34.6135, -58.4025),
+    ("Av. Callao 1200", "Recoleta", -34.5955, -58.3930), ("Av. Las Heras 3000", "Palermo", -34.5840, -58.4010),
+    ("Av. Scalabrini Ortiz 1500", "Palermo", -34.5915, -58.4280), ("Av. Medrano 1000", "Almagro", -34.6030, -58.4210),
+    ("Av. Díaz Vélez 5000", "Caballito", -34.6110, -58.4370), ("Av. Nazca 2000", "Villa Santa Rita", -34.6060, -58.4775),
+    ("Av. San Martín 5000", "Agronomía", -34.5960, -58.4950), ("Av. Francisco Beiró 4000", "Villa Devoto", -34.6020, -58.5060),
+    ("Av. Juan B. Alberdi 5000", "Parque Avellaneda", -34.6400, -58.4700), ("Av. Larrazábal 1500", "Mataderos", -34.6510, -58.4960),
+    ("Av. Centenario 1000", "San Isidro", -34.4720, -58.5160), ("Av. Rivadavia 18000", "Morón", -34.6520, -58.6100),
+    ("Av. del Libertador 300", "Vicente López", -34.5280, -58.4710), ("Av. Cabildo 4500", "Saavedra", -34.5440, -58.4760),
 ]
-DEALER_SUFFIXES = ["Automotores", "Motors", "Autos", "Center", "Cars", "Group"]
 DEALER_PREFIXES = ["Alto", "Delta", "Puerto", "Cumbre", "Vía", "Faro", "Norte", "Arena", "Brisa", "Nexo", "Senda", "Nova"]
+DEALER_SUFFIXES = ["Automotores", "Motors", "Autos", "Center", "Cars", "Group"]
 HOURS = [("Lunes a viernes", "8:30 a 17:30"), ("Lunes a sábado", "9:00 a 18:00"), ("Lunes a viernes", "8:00 a 17:00")]
 USER_REF = (-34.5880, -58.4300)  # ubicación simulada del usuario (Palermo)
 
-# ---------------------------------------------------------------------------
 VIN_VALUES = dict(zip("ABCDEFGHJKLMNPRSTUVWXYZ", [1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 7, 9, 2, 3, 4, 5, 6, 7, 8, 9]))
 VIN_WEIGHTS = [8, 7, 6, 5, 4, 3, 2, 10, 0, 9, 8, 7, 6, 5, 4, 3, 2]
 VIN_CHARS = "ABCDEFGHJKLMNPRSTUVWXYZ0123456789"
 YEAR_CODE = {y: c for y, c in zip(range(2001, 2031), "123456789ABCDEFGHJKLMNPRSTVWXY")}
+MERCOSUR_PREFIX = {2016: "AA", 2017: "AB", 2018: "AC", 2019: "AD", 2020: "AE", 2021: "AF", 2022: "AF",
+                   2023: "AG", 2024: "AH", 2025: "AH", 2026: "AI"}
+OLD_PREFIX = {2006: "F", 2007: "G", 2008: "H", 2009: "I", 2010: "J", 2011: "K", 2012: "L", 2013: "M",
+              2014: "N", 2015: "O"}
+LETTERS = "ABCDEFGHJKLMNPRSTUVWXYZ"
+
+
+# ---------------------------------------------------------------------------
+def familia(marca: str, desc: str) -> tuple[str, str]:
+    """Separa la descripción DNRPA en (modelo, versión). Ej.: 'GOL TREND 1.6' -> ('GOL', 'TREND 1.6')."""
+    words = desc.split()
+    brand_words = set(marca.split())
+    while words and (words[0] in brand_words or words[0] in {"NUEVO", "NUEVA", "NEW"}):
+        words = words[1:]
+    if not words:
+        return "", ""
+    first = re.sub(r"(?<=[A-Z])\d$", "", words[0]) if words[0] in ("RANGER2",) else words[0]
+    if first in ("TIGGO", "HB", "CLASE") and len(words) > 1:
+        return f"{first} {words[1]}", " ".join(words[2:])
+    return first, " ".join(words[1:])
+
+
+def bonito(fam: str) -> str:
+    if fam in NOMBRES:
+        return NOMBRES[fam]
+    return " ".join(w if any(c.isdigit() for c in w) and len(w) <= 4 else w.capitalize() for w in fam.split())
+
+
+SIGLAS = {"TFSI", "TSI", "THP", "HDI", "CRDI", "TGDI", "PHEV", "MHEV", "HEV", "AWD", "FWD", "RWD", "SCE", "VTI",
+          "GSE", "EOBD", "TDI", "CDI", "DCT", "CVT", "SRV", "SRX", "XEI", "XLI", "XLS", "LTZ", "GLX", "EXL",
+          "DM-I", "I-DM", "MSI", "TCE", "ZEN", "GTI", "AMG", "4MATIC", "XDRIVE", "SDRIVE", "PRO4X", "MY25", "MY26", "MY27"}
+
+
+def version_bonita(v: str) -> str:
+    if not v:
+        return "Base"
+    out = []
+    for w in v.split():
+        u = w.upper()
+        if u in SIGLAS:
+            out.append({"4MATIC": "4Matic", "XDRIVE": "xDrive", "SDRIVE": "sDrive", "DM-I": "DM-i", "I-DM": "i-DM", "ZEN": "Zen"}.get(u, u))
+        elif re.fullmatch(r"\d+X\d", u):
+            out.append(u.lower())
+        elif "/" in u and all(len(p) <= 2 for p in u.split("/")):
+            out.append(u)
+        elif any(c.isdigit() for c in u) or (u.isalpha() and len(u) <= 3):
+            out.append(u)
+        else:
+            out.append(w.capitalize())
+    return " ".join(out)[:40].strip()
 
 
 def make_vin(wmi: str, year: int, used: set) -> str:
@@ -296,12 +274,6 @@ def make_vin(wmi: str, year: int, used: set) -> str:
         if vin not in used:
             used.add(vin)
             return vin
-
-
-MERCOSUR_PREFIX = {2016: "AA", 2017: "AB", 2018: "AC", 2019: "AD", 2020: "AE", 2021: "AF",
-                   2022: "AF", 2023: "AG", 2024: "AH", 2025: "AH", 2026: "AI"}
-OLD_PREFIX = {2008: "H", 2009: "I", 2010: "J", 2011: "K", 2012: "L", 2013: "M", 2014: "N", 2015: "O"}
-LETTERS = "ABCDEFGHJKLMNPRSTUVWXYZ"
 
 
 def make_plate(year: int, used: set) -> str:
@@ -323,11 +295,11 @@ def km(a, b) -> float:
 
 
 def slug(text: str) -> str:
-    text = text.lower().replace("ë", "e").replace("é", "e").replace("í", "i")
+    for a, b in (("ë", "e"), ("é", "e"), ("í", "i"), ("á", "a"), ("ó", "o"), ("ú", "u")):
+        text = text.lower().replace(a, b)
     return re.sub(r"[^a-z0-9]+", "-", text).strip("-")
 
 
-# ---------------------------------------------------------------------------
 def find_array(src: str, name: str):
     m = re.search(r"export const %s[^=]*= (\[)" % name, src)
     start, depth = m.start(1), 0
@@ -339,143 +311,230 @@ def find_array(src: str, name: str):
     raise ValueError(name)
 
 
+# ---------------------------------------------------------------------------
+def cargar(paths, anio_min, anio_max):
+    cols = ["registro_seccional_provincia", "automotor_anio_modelo", "automotor_tipo_descripcion",
+            "automotor_marca_descripcion", "automotor_modelo_descripcion", "automotor_uso_descripcion"]
+    df = pd.concat([pd.read_csv(p, usecols=cols, dtype=str, encoding="utf-8-sig", on_bad_lines="skip") for p in paths])
+    df = df[df.automotor_tipo_descripcion.fillna("").str.match(TIPOS_LIVIANOS)]
+    df = df[df.automotor_uso_descripcion == "Privado"]
+    df = df[df.automotor_marca_descripcion.isin(MARCAS)]
+    df = df[df.registro_seccional_provincia.notna() & df.automotor_modelo_descripcion.notna()]
+    df["anio"] = pd.to_numeric(df.automotor_anio_modelo, errors="coerce")
+    df = df[(df.anio >= anio_min) & (df.anio <= anio_max)]
+    fv = [familia(m, d) for m, d in zip(df.automotor_marca_descripcion, df.automotor_modelo_descripcion.fillna(""))]
+    df["fam"] = [f for f, _ in fv]
+    df["ver"] = [v for _, v in fv]
+    return df[df.fam != ""]
+
+
+def muestrear(df, n_familias, n_unidades):
+    """Toma las familias más vendidas y, además, la principal de cada marca, para que todas las marcas aparezcan."""
+    conteo = df.groupby(["automotor_marca_descripcion", "fam"]).size().sort_values(ascending=False)
+    elegidas = list(conteo.head(n_familias).index)
+    for marca in conteo.index.get_level_values(0).unique():
+        top = conteo[marca].head(2 if conteo[marca].sum() > 0.01 * conteo.sum() else 1)
+        for fam, v in top.items():
+            if (marca, fam) not in elegidas and v >= 30:
+                elegidas.append((marca, fam))
+    total = conteo[elegidas].sum()
+    cupos = {k: min(6, max(2, round(conteo[k] / total * n_unidades))) for k in elegidas}
+    filas = []
+    for (marca, fam), cupo in cupos.items():
+        sub = df[(df.automotor_marca_descripcion == marca) & (df.fam == fam)]
+        for _, r in sub.sample(n=min(cupo, len(sub)), random_state=rng.randrange(10**6)).iterrows():
+            filas.append({
+                "brand": MARCAS[marca], "model": bonito(fam), "version": version_bonita(r.ver),
+                "year": int(r.anio), "province": r.registro_seccional_provincia,
+            })
+    return filas, set(elegidas), len(df)
+
+
 def main() -> None:
-    src = DB.read_text(encoding="utf-8")
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--altas", nargs="+", required=True)
+    ap.add_argument("--transferencias", nargs="+", required=True)
+    args = ap.parse_args()
+
+    # Siempre parte de la base original (rama main) para que el resultado sea reproducible
+    src = subprocess.run(["git", "-C", str(ROOT), "show", "origin/main:src/data/avisar-db.ts"],
+                         capture_output=True, text=True, check=True).stdout
     tables = {}
-    for name in ["USERS", "VEHICLES", "OWNERSHIPS", "CAMPAIGNS", "ALERTS"]:
+    for name in ["USERS", "VEHICLES", "OWNERSHIPS", "CAMPAIGNS", "ALERTS", "QUERY_HISTORY"]:
         a, b = find_array(src, name)
         tables[name] = json.loads(src[a:b])
-
     vehicles, campaigns = tables["VEHICLES"], tables["CAMPAIGNS"]
+
+    usados = cargar(args.transferencias, 2006, 2025)
+    okm = cargar(args.altas, 2025, 2026)
+    filas_u, fam_u, total_u = muestrear(usados, TOP_FAMILIAS_USADOS, N_USADOS)
+    filas_0, fam_0, total_0 = muestrear(okm, TOP_FAMILIAS_0KM, N_0KM)
+    filas = filas_u + filas_0
+
     used_vins = {v["vin"] for v in vehicles}
     used_plates = {v["plateNormalized"] for v in vehicles}
-    vehicle_ids = {v["id"] for v in vehicles}
     next_veh = max(int(v["id"][4:]) for v in vehicles if v["id"].startswith("VEH-")) + 1
-
-    # Vehículos -------------------------------------------------------------
-    units = [(b, m, vers[i % len(vers)], y, wmi) for b, m, vers, years, wmi in MODELS for i, y in enumerate(years)]
-    units += EXTRA_UNITS
-    new_vehicles = []
-    for brand, model, version, year, wmi in units:
-        key = f"{brand}|{model}|{version}|{year}"
-        if any(f"{v['brand']}|{v['model']}|{v['version']}|{v['year']}" == key for v in vehicles + new_vehicles):
-            continue
-        vid = f"VEH-{next_veh:04d}"
+    nuevos = []
+    for f in filas:
+        plate = make_plate(f["year"], used_plates)
+        nuevos.append({
+            "id": f"VEH-{next_veh:04d}", "plate": plate,
+            "vin": make_vin(WMI.get(f["brand"], "8A0"), f["year"], used_vins),
+            "brand": f["brand"], "model": f["model"], "version": f["version"], "year": str(f["year"]),
+            "plateNormalized": plate.replace(" ", ""), "province": f["province"],
+        })
         next_veh += 1
-        plate = make_plate(year, used_plates)
-        new_vehicles.append({
-            "id": vid, "plate": plate, "vin": make_vin(wmi, year, used_vins), "brand": brand, "model": model,
-            "version": version, "year": str(year), "plateNormalized": plate.replace(" ", ""),
-        })
-    vehicles += new_vehicles
+    vehicles += nuevos
 
-    # Campañas --------------------------------------------------------------
-    existing_keys = {(c["brand"], c["model"], c["yearFrom"], c["title"]) for c in campaigns}
+    # Campañas ficticias para los modelos nuevos -------------------------------
     used_ids = {c["id"] for c in campaigns}
-    for brand, model, y_from, y_to, fault, risk in CAMPAIGNS:
-        title, component, description, danger, action = FAULTS[fault]
-        if (brand, model, y_from, title) in existing_keys:
-            continue
-        year = rng.choice([2023, 2024, 2025, 2026])
-        month = rng.randrange(1, 13 if year < 2026 else 10)
-        day = rng.randrange(1, 28)
-        while True:
-            cid = f"RC-{year}-{rng.randrange(1000):04d}"
-            if cid not in used_ids:
-                used_ids.add(cid)
-                break
-        campaigns.append({
-            "id": cid,
-            "campaign": f"DEMO-SC-{year}-{FAULT_CODE[fault]}-{slug(model).replace('-', '').upper()[:4]}",
-            "brand": brand, "model": model, "yearFrom": y_from, "yearTo": y_to,
-            "title": title, "component": component, "risk": risk,
-            "description": description, "danger": danger, "action": action,
-            "date": f"{day} de {MONTHS[month - 1]} de {year}",
-            "publishedAt": f"{year}-{month:02d}-{day:02d}",
-            "contact": CONTACTS[brand],
-        })
+    por_modelo = {}
+    for v in nuevos:
+        por_modelo.setdefault((v["brand"], v["model"]), []).append(int(v["year"]))
+    # Años protegidos: vehículos de las cuentas demo y de los escenarios de la portada
+    ids_demo = {o["vehicleId"] for o in tables["OWNERSHIPS"]} | {"toyota-corolla-2021", "ford-focus-2018", "volkswagen-gol-2019"}
+    protegidos = {(v["brand"], v["model"], int(v["year"])) for v in vehicles if v["id"] in ids_demo}
+    for (brand, model), years in sorted(por_modelo.items()):
+        original = (brand, model) in MODELOS_ORIGINALES
+        if original:
+            years = [y for y in years if (brand, model, y) not in protegidos]
+            if not years:
+                continue
+        n_camp = 3 if len(years) >= 5 else 2
+        fallas = FALLAS_ELECTRICOS if brand in ELECTRICOS else list(FALLAS_COMBUSTION)
+        if model in UTILITARIOS:
+            fallas = fallas + ["puerta_corrediza"] * 3
+        elegidas = rng.sample(fallas, n_camp)
+        for k, fault in enumerate(elegidas):
+            centro = sorted(years)[len(years) // 2] if k == 0 else rng.choice(years)
+            span = rng.choice([2, 3, 4])
+            y_from, y_to = centro - rng.randrange(span + 1), centro + rng.randrange(span + 1)
+            y_to = min(y_to, 2026)
+            if original:
+                bloqueados = sorted(y for (b, m, y) in protegidos if b == brand and m == model)
+                while any(y_from <= y <= y_to for y in bloqueados) and y_from <= y_to:
+                    if centro > max(b for b in bloqueados if y_from <= b <= y_to):
+                        y_from += 1
+                    else:
+                        y_to -= 1
+                if y_from > y_to or not (y_from <= centro <= y_to):
+                    continue
+            risk = rng.choices(["CRÍTICO", "ALTO", "MEDIO"], weights=[3, 4, 3])[0]
+            title, component, description, danger, action = FAULTS[fault]
+            year = rng.choice([2023, 2024, 2025, 2026])
+            month = rng.randrange(1, 13 if year < 2026 else 10)
+            day = rng.randrange(1, 28)
+            while True:
+                cid = f"RC-{year}-{rng.randrange(1000):04d}"
+                if cid not in used_ids:
+                    used_ids.add(cid)
+                    break
+            campaigns.append({
+                "id": cid,
+                "campaign": f"DEMO-SC-{year}-{FAULT_CODE[fault]}-{re.sub('[^A-Z0-9]', '', model.upper())[:4]}",
+                "brand": brand, "model": model, "yearFrom": y_from, "yearTo": y_to,
+                "title": title, "component": component, "risk": risk,
+                "description": description, "danger": danger, "action": action,
+                "date": f"{day} de {MONTHS[month - 1]} de {year}",
+                "publishedAt": f"{year}-{month:02d}-{day:02d}",
+                "contact": CONTACTS.get(brand, f"0800-000-{rng.randrange(200, 999):04d}"),
+            })
     campaigns.sort(key=lambda c: c["publishedAt"], reverse=True)
 
-    # Cuenta demo con vehículos de las marcas nuevas -------------------------
+    def recalls(v):
+        y = int(v["year"])
+        return [c for c in campaigns if c["brand"] == v["brand"] and c["model"] == v["model"] and c["yearFrom"] <= y <= c["yearTo"]]
+
+    # Cuenta demo con vehículos tomados del parque real ------------------------
     users, owners, alerts = tables["USERS"], tables["OWNERSHIPS"], tables["ALERTS"]
-    if not any(u["id"] == "USR-0009" for u in users):
-        users.append({
-            "id": "USR-0009", "name": "Martina", "fullName": "Martina Ejemplo", "email": "martina@demo.avisar.com",
-            "password": "demo1234", "phone": "+54 9 11 0000-0009", "province": "Ciudad de Buenos Aires",
-            "scenario": "Familia con varios vehículos de marcas nuevas y campañas pendientes",
-            "createdAt": "2026-10-30",
-            "consent": {"accepted": True, "acceptedAt": "2026-10-30", "text": users[0]["consent"]["text"]},
+    users.append({
+        "id": "USR-0009", "name": "Martina", "fullName": "Martina Ejemplo", "email": "martina@demo.avisar.com",
+        "password": "demo1234", "phone": "+54 9 11 0000-0009", "province": "Córdoba",
+        "scenario": "Familia con varios vehículos de marcas distintas y campañas pendientes",
+        "createdAt": "2026-10-30",
+        "consent": {"accepted": True, "acceptedAt": "2026-10-30", "text": users[0]["consent"]["text"]},
+    })
+    picks, marcas_vistas = [], set()
+    for v in nuevos:
+        if recalls(v) and v["brand"] not in marcas_vistas and (v["brand"], v["model"]) not in MODELOS_ORIGINALES:
+            picks.append(v)
+            marcas_vistas.add(v["brand"])
+        if len(picks) == 4:
+            break
+    next_own = max(int(o["id"][4:]) for o in owners) + 1
+    next_alr = max(int(a["id"][4:]) for a in alerts) + 1
+    for i, v in enumerate(picks):
+        owners.append({
+            "id": f"OWN-{next_own + i:04d}", "vehicleId": v["id"], "ownerId": "USR-0009", "plate": v["plate"],
+            "vin": v["vin"], "role": "titular" if i < 3 else "usuario habitual", "since": "2026-10-30",
+            "until": None, "source": "Declarado por el usuario en AvisAR", "verified": False,
         })
-        picks = [("Jeep", "Renegade", "2017"), ("BYD", "Dolphin Mini", "2025"), ("Hyundai", "Creta", "2018"), ("Mitsubishi", "L200", "2020")]
-        next_own = max(int(o["id"][4:]) for o in owners) + 1
-        next_alr = max(int(a["id"][4:]) for a in alerts) + 1
-        for i, (b, m, y) in enumerate(picks):
-            v = next(x for x in vehicles if x["brand"] == b and x["model"] == m and x["year"] == y)
-            owners.append({
-                "id": f"OWN-{next_own + i:04d}", "vehicleId": v["id"], "ownerId": "USR-0009", "plate": v["plate"],
-                "vin": v["vin"], "role": "titular" if i < 3 else "usuario habitual", "since": "2026-10-30",
-                "until": None, "source": "Declarado por el usuario en AvisAR", "verified": False,
+        if i < 2:
+            alerts.append({
+                "id": f"ALR-{next_alr + i:04d}", "ownerId": "USR-0009", "vehicleId": v["id"],
+                "vehicle": f"{v['brand']} {v['model']} {v['version']} {v['year']}", "plate": v["plate"],
+                "channel": "WhatsApp" if i == 0 else "E-mail",
+                "destination": "+54 9 11 0000-0009" if i == 0 else "martina@demo.avisar.com", "active": True,
             })
-            if i < 2:
-                alerts.append({
-                    "id": f"ALR-{next_alr + i:04d}", "ownerId": "USR-0009", "vehicleId": v["id"],
-                    "vehicle": f"{b} {m} {v['version']} {y}", "plate": v["plate"],
-                    "channel": "WhatsApp" if i == 0 else "E-mail",
-                    "destination": "+54 9 11 0000-0009" if i == 0 else "martina@demo.avisar.com", "active": True,
-                })
 
-    # Escribir tablas JSON ----------------------------------------------------
-    for name in ["ALERTS", "CAMPAIGNS", "OWNERSHIPS", "VEHICLES", "USERS"]:  # de abajo hacia arriba
+    for i, v in enumerate(picks):
+        tables["QUERY_HISTORY"].append({"ownerId": "USR-0009", "vehicleId": v["id"], "consultedAt": f"2026-11-0{1 + i % 3}"})
+
+    for name in ["QUERY_HISTORY", "ALERTS", "CAMPAIGNS", "OWNERSHIPS", "VEHICLES", "USERS"]:
         a, b = find_array(src, name)
-        src = src[:a] + json.dumps(tables[name], ensure_ascii=False, indent=2).replace("\n", "\n") + src[b:]
+        src = src[:a] + json.dumps(tables[name], ensure_ascii=False, indent=2, allow_nan=False) + src[b:]
 
-    # Concesionarios (literal TS, no JSON) ------------------------------------
+    # Concesionarios para las marcas que no tienen ------------------------------
     a, b = find_array(src, "DEALERS")
-    dealer_block = src[a:b]
-    have = set(re.findall(r'brand: "([^"]+)"', dealer_block))
-    all_brands = sorted({v["brand"] for v in vehicles})
-    lat0, lat1 = -34.75, -34.48
-    lng0, lng1 = -58.58, -58.35
-    added = []
-    loc_i = 0
-    for brand in all_brands:
+    block = src[a:b]
+    have = set(re.findall(r'brand: "([^"]+)"', block))
+    cuenta = {}
+    for v in vehicles:
+        cuenta[v["brand"]] = cuenta.get(v["brand"], 0) + 1
+    added, loc_i = [], 0
+    lat0, lat1, lng0, lng1 = -34.75, -34.47, -58.62, -58.36
+    for brand in sorted(cuenta):
         if brand in have:
             continue
-        for n in range(2):
+        for n in range(2 if cuenta[brand] >= 8 else 1):
             addr, hood, lat, lng = LOCATIONS[loc_i % len(LOCATIONS)]
             loc_i += 1
-            days, hours = HOURS[(loc_i + n) % len(HOURS)]
-            name = f"{DEALER_PREFIXES[(loc_i * 5 + n) % len(DEALER_PREFIXES)]} {DEALER_SUFFIXES[(loc_i + n) % len(DEALER_SUFFIXES)]}"
-            x = round(8 + (lng - lng0) / (lng1 - lng0) * 84)
-            y = round(8 + (lat1 - lat) / (lat1 - lat0) * 84)
+            days, hours = HOURS[loc_i % len(HOURS)]
+            name = f"{DEALER_PREFIXES[(loc_i * 5) % len(DEALER_PREFIXES)]} {DEALER_SUFFIXES[loc_i % len(DEALER_SUFFIXES)]}"
             added.append(
                 "  {\n"
-                f'    id: "{slug(brand)}-{slug(hood)}",\n'
-                f'    name: "{name}",\n'
-                f'    brand: "{brand}",\n'
-                f'    address: "{addr}",\n'
-                f'    neighborhood: "{hood}",\n'
-                f"    distanceKm: {km(USER_REF, (lat, lng))},\n"
-                f'    days: "{days}",\n'
-                f'    hours: "{hours}",\n'
-                f"    x: {x},\n"
-                f"    y: {y},\n"
-                f"    lat: {lat},\n"
-                f"    lng: {lng},\n"
-                "  },"
+                f'    id: "{slug(brand)}-{slug(hood)}-{n + 1}",\n    name: "{name}",\n    brand: "{brand}",\n'
+                f'    address: "{addr}",\n    neighborhood: "{hood}",\n    distanceKm: {km(USER_REF, (lat, lng))},\n'
+                f'    days: "{days}",\n    hours: "{hours}",\n'
+                f"    x: {round(8 + (lng - lng0) / (lng1 - lng0) * 84)},\n    y: {round(8 + (lat1 - lat) / (lat1 - lat0) * 84)},\n"
+                f"    lat: {lat},\n    lng: {lng},\n  }},"
             )
-    if added:
-        body = dealer_block[:-1].rstrip()
-        if not body.endswith(","):
-            body += ","
-        dealer_block = body + "\n" + "\n".join(added) + "\n]"
-        src = src[:a] + dealer_block + src[b:]
+    body = block[:-1].rstrip()
+    if not body.endswith(","):
+        body += ","
+    src = src[:a] + body + "\n" + "\n".join(added) + "\n]" + src[b:]
 
+    # Tipo y encabezado -------------------------------------------------------
+    src = src.replace("  version: string\n  year: string\n}",
+                      "  version: string\n  year: string\n  /** Provincia del registro seccional (DNRPA). Solo en los vehículos tomados del parque real. */\n  province?: string\n}", 1)
+    miles = lambda n: f"{n:,}".replace(",", ".")
+    header = (
+        " * Base generada el 2026-10-20 con gen_db.py. No editar a mano los arrays.\n"
+        " * Vehículos ampliados con datos abiertos de la DNRPA (datos.gob.ar, licencia CC BY 4.0): marca, modelo,\n"
+        f" * versión, año y provincia de una muestra de {miles(total_u)} transferencias (enero a septiembre de 2026)\n"
+        f" * y {miles(total_0)} inscripciones iniciales (septiembre de 2026) de autos y SUV de uso privado (sin pick-ups ni utilitarios).\n"
+        " * El dataset no publica dominio ni VIN: las patentes y los VIN son ficticios.\n"
+        " * Regenerar con scripts/ampliar_datos_demo.py.\n"
+        " * Las campañas"
+    )
+    src = re.sub(r" \* Generado el .*?\n \* Las campañas", lambda _: header, src, count=1, flags=re.S)
     DB.write_text(src, encoding="utf-8")
-    brands = sorted({v["brand"] for v in vehicles})
-    models = {(v["brand"], v["model"]) for v in vehicles}
-    print(f"Vehículos: {len(vehicles)} (+{len(new_vehicles)}) · Marcas: {len(brands)} · Modelos: {len(models)}")
-    print(f"Campañas: {len(campaigns)} · Concesionarios nuevos: {len(added)} · Usuarios: {len(users)}")
+
+    n = [len(recalls(v)) for v in vehicles]
+    print(f"Vehículos: {len(vehicles)} (+{len(nuevos)}) · Marcas: {len({v['brand'] for v in vehicles})} · "
+          f"Modelos: {len({(v['brand'], v['model']) for v in vehicles})}")
+    print(f"Campañas: {len(campaigns)} · Concesionarios nuevos: {len(added)} · Cuenta demo: {[p['model'] for p in picks]}")
+    print(f"Recalls por vehículo -> 0: {n.count(0)} · 1: {n.count(1)} · 2+: {sum(x >= 2 for x in n)}")
 
 
 if __name__ == "__main__":

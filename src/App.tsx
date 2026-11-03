@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import {
+  CAMPAIGNS,
+  CATALOG,
   DEMO_VEHICLES,
   DEALERS,
   alertsOf,
@@ -457,8 +459,8 @@ function HomeScreen({
             </p>
             <div className="mt-7 grid grid-cols-3 gap-3">
               {[
-                ["15", "modelos"],
-                ["11", "campañas demo"],
+                [String(CATALOG.length), "modelos"],
+                [String(CAMPAIGNS.length), "campañas demo"],
                 ["0", "costo"],
               ].map(([number, label]) => (
                 <div key={label} className="border-l-2 border-red pl-3">
@@ -2850,7 +2852,7 @@ function LoginScreen({
           usuario@avisar.com · segura123
           <br />
           Otras cuentas demo: gustavo@, carolina@, lucia@, jorge@, sofia@,
-          nicolas@ y valeria@demo.avisar.com · demo1234
+          nicolas@, valeria@ y martina@demo.avisar.com · demo1234
         </div>
         <p className="mt-4 text-center text-xs text-muted">
           Simulación local: no se envían credenciales a ningún servidor.
