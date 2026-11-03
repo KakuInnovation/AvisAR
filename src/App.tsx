@@ -1186,7 +1186,7 @@ function DetailScreen({
                     Ver turno
                   </button>
                 </div>
-              ) : appointment?.status === "Realizado" ? (
+              ) : status === "Reparación realizada" ? (
                 <div className="mt-5 rounded-xl bg-green-light p-4 text-sm font-bold text-green">
                   Reparación realizada · alerta cerrada para esta campaña
                 </div>
@@ -1925,18 +1925,33 @@ function BookingScreen({
   alerts: AppAlert[]
   initialAppointment?: AppAppointment
   onBack: () => void
-  onConfirm: (date: string, time: string, channel: Channel) => void
+  onConfirm: (
+    date: string,
+    time: string,
+    channel: Channel,
+    destination: string,
+  ) => void
 }) {
   const days = appointmentDays(dealer.id)
   const existingAlert = alerts.find(
     (alert) => alert.plate === vehicle.plate && alert.active,
   )
+  const initialChannel =
+    initialAppointment?.reminderChannel ??
+    existingAlert?.channel ??
+    "WhatsApp"
   const [date, setDate] = useState("")
   const [time, setTime] = useState("")
-  const [channel, setChannel] = useState<Channel>(
-    initialAppointment?.reminderChannel ??
-      existingAlert?.channel ??
-      "WhatsApp",
+  const [channel, setChannel] = useState<Channel>(initialChannel)
+  const [destination, setDestination] = useState(
+    initialAppointment?.reminderDestination ??
+      alerts.find(
+        (alert) =>
+          alert.plate === vehicle.plate &&
+          alert.active &&
+          alert.channel === initialChannel,
+      )?.destination ??
+      "",
   )
   const [error, setError] = useState("")
   const selectedDay = days.find((day) => day.date === date)
@@ -2038,7 +2053,18 @@ function BookingScreen({
               <button
                 key={item}
                 aria-pressed={channel === item}
-                onClick={() => setChannel(item)}
+                onClick={() => {
+                  setChannel(item)
+                  setDestination(
+                    alerts.find(
+                      (alert) =>
+                        alert.plate === vehicle.plate &&
+                        alert.active &&
+                        alert.channel === item,
+                    )?.destination ?? "",
+                  )
+                  setError("")
+                }}
                 className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border py-3 text-sm font-bold ${
                   channel === item
                     ? item === "WhatsApp"
@@ -2054,6 +2080,32 @@ function BookingScreen({
           </div>
         </fieldset>
 
+        <label className="mt-5 block">
+          <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-navy">
+            {channel === "WhatsApp"
+              ? "Número de WhatsApp"
+              : "Correo electrónico"}
+          </span>
+          <input
+            type={channel === "WhatsApp" ? "tel" : "email"}
+            value={destination}
+            onChange={(event) => {
+              setDestination(event.target.value)
+              setError("")
+            }}
+            autoComplete={channel === "WhatsApp" ? "tel" : "email"}
+            placeholder={
+              channel === "WhatsApp"
+                ? "+54 9 11 1234-5678"
+                : "nombre@ejemplo.com"
+            }
+            className="w-full rounded-lg border border-border bg-white px-4 py-3 text-sm outline-none focus:border-navy focus:ring-2 focus:ring-navy/10"
+          />
+          <span className="mt-2 block text-xs text-muted">
+            Usaremos este dato únicamente para el recordatorio simulado.
+          </span>
+        </label>
+
         {error && (
           <p role="alert" className="mt-4 flex items-center gap-2 text-sm font-bold text-red">
             <Icon name="alert" className="size-4" />
@@ -2066,7 +2118,20 @@ function BookingScreen({
               setError("Elegí un día y un horario para confirmar el turno.")
               return
             }
-            onConfirm(date, time, channel)
+            const validPhone = /^\+?[\d\s()-]{9,}$/.test(destination)
+            const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(destination)
+            if (
+              (channel === "WhatsApp" && !validPhone) ||
+              (channel === "E-mail" && !validEmail)
+            ) {
+              setError(
+                channel === "WhatsApp"
+                  ? "Ingresá un número de WhatsApp válido."
+                  : "Ingresá un correo electrónico válido.",
+              )
+              return
+            }
+            onConfirm(date, time, channel, destination.trim())
           }}
           className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red py-3.5 text-sm font-bold text-white hover:bg-red/90"
         >
@@ -2150,7 +2215,12 @@ function BookingOkScreen({
         >
           <span>
             <strong className="block text-sm text-navy">Recordatorio 24 h antes</strong>
-            <span className="text-xs text-muted">Por {appointment.reminderChannel}</span>
+            <span className="text-xs text-muted">
+              Por {appointment.reminderChannel}
+              {appointment.reminderDestination
+                ? ` · ${appointment.reminderDestination}`
+                : ""}
+            </span>
           </span>
           <span
             className={`flex h-6 w-11 items-center rounded-full p-1 transition ${
@@ -3190,7 +3260,7 @@ export default function App() {
                 (appointment) => appointment.id === reprogrammingId,
               )}
               onBack={() => navigate("dealers")}
-              onConfirm={(date, time, channel) => {
+              onConfirm={(date, time, channel, destination) => {
                 if (!user) return
                 const existing = appointments.find(
                   (appointment) => appointment.id === reprogrammingId,
@@ -3209,6 +3279,7 @@ export default function App() {
                   date,
                   time,
                   reminderChannel: channel,
+                  reminderDestination: destination,
                   reminderActive: true,
                   status: "Programado",
                 }

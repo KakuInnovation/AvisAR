@@ -1295,6 +1295,7 @@ export interface AppAppointment {
   date: string
   time: string
   reminderChannel: Channel
+  reminderDestination?: string
   reminderActive: boolean
   status: AppointmentStatus
 }
@@ -1688,6 +1689,7 @@ export function appointmentsOf(userId: string): AppAppointment[] {
       date: localIsoDate(pastDate),
       time: "9:30",
       reminderChannel: "E-mail",
+      reminderDestination: "usuario@avisar.com",
       reminderActive: false,
       status: "Realizado",
     },
