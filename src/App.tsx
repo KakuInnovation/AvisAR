@@ -1186,7 +1186,7 @@ function DetailScreen({
                     Ver turno
                   </button>
                 </div>
-              ) : status === "Reparación realizada" ? (
+              ) : appointment?.status === "Realizado" ? (
                 <div className="mt-5 rounded-xl bg-green-light p-4 text-sm font-bold text-green">
                   Reparación realizada · alerta cerrada para esta campaña
                 </div>
