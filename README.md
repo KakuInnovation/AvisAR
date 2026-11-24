@@ -3,7 +3,7 @@ La seguridad de tu auto, en claro y a tiempo.
 
 Prototipo de la webapp AvisAR: consulta de campañas de seguridad (recalls) por patente, VIN o marca y modelo; alertas; y reserva de turno de reparación en un concesionario oficial. Proyecto del Equipo 10 del Seminario de Integración Profesional (UADE).
 
-El código se exportó del prototipo en [Figma Make](https://www.figma.com/make/vhgCbh50d0p20249fDlzC3/Prototipo-AvisaAR-plataforma).
+Prototipo en Figma(https://www.figma.com/make/vhgCbh50d0p20249fDlzC3/Prototipo-AvisaAR-plataforma).
 
 ## Cómo correrlo
 
