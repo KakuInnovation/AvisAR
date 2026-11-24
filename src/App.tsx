@@ -428,7 +428,7 @@ function NavBar({
         <nav
           id="menu-principal"
           aria-label="Principal"
-          className={`${open ? "flex" : "hidden"} w-full flex-col gap-1 pb-2 lg:flex lg:w-auto lg:flex-row lg:items-center lg:pb-0`}
+          className={`${open ? "menu-open flex" : "hidden"} w-full flex-col gap-1 pb-2 lg:flex lg:w-auto lg:flex-row lg:items-center lg:pb-0`}
         >
           {items.map(([label, target]) => (
             <button
@@ -618,8 +618,13 @@ function HomeScreen({
             <div
               role="tablist"
               aria-label="Tipo de búsqueda"
-              className="mt-5 grid grid-cols-3 overflow-hidden rounded-md border-2 border-ink"
+              className="relative mt-5 grid grid-cols-3 overflow-hidden rounded-md border-2 border-ink bg-white"
             >
+              <span
+                aria-hidden="true"
+                className="tab-indicator absolute inset-y-0 left-0 w-1/3 bg-ink"
+                style={{ transform: `translateX(${tabs.findIndex(([value]) => value === mode) * 100}%)` }}
+              />
               {tabs.map(([value, label], index) => (
                 <button
                   key={value}
@@ -631,9 +636,9 @@ function HomeScreen({
                   tabIndex={mode === value ? 0 : -1}
                   onClick={() => selectTab(value)}
                   onKeyDown={(event) => onTabKey(event, index)}
-                  className={`min-h-12 cursor-pointer px-2 text-base font-bold leading-tight ${
+                  className={`relative min-h-12 cursor-pointer px-2 text-base font-bold leading-tight ${
                     index > 0 ? "border-l-2 border-ink" : ""
-                  } ${mode === value ? "bg-ink text-white" : "bg-white text-ink hover:bg-bg"}`}
+                  } ${mode === value ? "text-white" : "text-ink hover:bg-bg/70"}`}
                 >
                   {label}
                 </button>
@@ -641,6 +646,7 @@ function HomeScreen({
             </div>
 
             <div id="search-panel" role="tabpanel" aria-labelledby={`tab-${mode}`} className="mt-5 min-h-36">
+              <div key={mode} className="pop-in">
               {mode === "plate" && (
                 <div>
                   <label htmlFor="plate-input" className="mb-2 block text-base font-bold">
@@ -770,21 +776,24 @@ function HomeScreen({
                   </label>
                 </div>
               )}
+              </div>
             </div>
 
-            {error && (
-              <div
-                role="alert"
-                className="mb-3 flex items-center gap-2 rounded-lg border-2 border-risk-high bg-risk-high-light px-3 py-2 text-base font-semibold text-risk-high"
-              >
-                <Icon name="alert" className="size-5 shrink-0" />
-                {error}
-              </div>
-            )}
+            <div role="alert">
+              {error && (
+                <div
+                  key={error}
+                  className="pop-in mb-3 flex items-center gap-2 rounded-lg border-2 border-risk-high bg-risk-high-light px-3 py-2 text-base font-semibold text-risk-high"
+                >
+                  <Icon name="alert" className="size-5 shrink-0" />
+                  {error}
+                </div>
+              )}
+            </div>
             {notFound && (
               <div
                 role="status"
-                className="mb-3 rounded-lg border-2 border-dashed border-graphite bg-white px-5 py-5 text-center"
+                className="pop-in mb-3 rounded-lg border-2 border-dashed border-graphite bg-white px-5 py-5 text-center"
               >
                 <p className="text-base leading-relaxed text-muted">
                   No encontramos ese vehículo en la base de demostración. Probá
@@ -936,7 +945,7 @@ function HomeScreen({
                 <button
                   key={vehicle.id}
                   onClick={() => onSearch(vehicle)}
-                  className={`group cursor-pointer rounded-xl border bg-white p-5 text-left transition hover:-translate-y-0.5 hover:shadow-md ${tone}`}
+                  className={`group cursor-pointer rounded-xl border bg-white p-5 text-left hover:bg-bg ${tone}`}
                 >
                   <div className="flex items-start justify-between">
                     <Icon name="car" className="size-6 text-navy" />
@@ -1072,7 +1081,11 @@ function ShareReport({ vehicle }: { vehicle: AppVehicle }) {
     window.setTimeout(() => setCopied(""), 3000)
   }
   return (
-    <aside aria-labelledby="report-title" className="flex flex-col gap-4">
+    <aside
+      aria-labelledby="report-title"
+      className="reveal flex flex-col gap-4"
+      style={{ "--delay": "200ms" } as React.CSSProperties}
+    >
       <h2 id="report-title" className="font-display text-4xl font-extrabold">
         Informe para compartir
       </h2>
@@ -1130,7 +1143,12 @@ function ShareReport({ vehicle }: { vehicle: AppVehicle }) {
           Copiar resumen
         </button>
         <p role="status" aria-live="polite" className="min-h-6 text-base font-semibold text-ok">
-          {copied}
+          {copied && (
+            <span key={copied} className="pop-in inline-flex items-center gap-2">
+              <Icon name="check" className="size-5" />
+              {copied}
+            </span>
+          )}
         </p>
       </div>
       <p className="text-sm leading-relaxed text-muted">
@@ -1171,9 +1189,12 @@ function ResultsScreen({
         <div className="flex min-w-0 flex-col gap-6">
           <section
             aria-labelledby="vehicle-title"
-            className="flex flex-wrap items-center gap-6 rounded-xl border-2 border-ink bg-white p-6"
+            className="reveal flex flex-wrap items-center gap-6 rounded-xl border-2 border-ink bg-white p-6"
+            style={{ "--rise": "12px" } as React.CSSProperties}
           >
-            <CarSilhouette type={body} className="h-20 w-52 shrink-0 text-ink" label={`Silueta de ${BODY_LABEL[body]}`} />
+            <span className="reveal-x shrink-0" style={{ "--delay": "60ms" } as React.CSSProperties}>
+              <CarSilhouette type={body} className="h-20 w-52 text-ink" label={`Silueta de ${BODY_LABEL[body]}`} />
+            </span>
             <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-2">
               <PlateFrame small>
                 <p className="px-4 py-1 text-center font-mono text-2xl font-bold tracking-[0.12em]">
@@ -1196,7 +1217,8 @@ function ResultsScreen({
 
           <section
             role={count > 0 ? "alert" : "status"}
-            className={`flex flex-wrap items-center gap-5 rounded-xl p-6 sm:p-7 ${
+            style={{ "--delay": "80ms" } as React.CSSProperties}
+            className={`reveal flex flex-wrap items-center gap-5 rounded-xl p-6 sm:p-7 ${hasCritical ? "alert-ring" : ""} ${
               count === 0
                 ? "border-2 border-ok bg-ok-light text-ink"
                 : hasCritical
@@ -1276,10 +1298,11 @@ function ResultsScreen({
                 </div>
               </div>
               <div className="mt-5 space-y-4">
-                {visible.map((recall) => (
+                {visible.map((recall, index) => (
                   <article
-                    key={recall.id}
-                    className={`rounded-lg border-2 bg-white p-5 sm:p-6 ${
+                    key={`${filter}-${recall.id}`}
+                    style={{ "--delay": `${160 + Math.min(index, 6) * 40}ms` } as React.CSSProperties}
+                    className={`reveal rounded-lg border-2 bg-white p-5 sm:p-6 ${
                       recall.risk === "CRÍTICO" ? "border-risk-high" : "border-ink"
                     }`}
                   >
@@ -3576,6 +3599,14 @@ export default function App() {
     )
   }
 
+  const focusHeading = () =>
+    window.requestAnimationFrame(() => {
+      const heading = document.querySelector<HTMLElement>("#contenido h1")
+      if (!heading) return
+      heading.setAttribute("tabindex", "-1")
+      heading.focus({ preventScroll: true })
+    })
+
   const protectedScreens: Screen[] = [
     "queries",
     "my-alerts",
@@ -3589,11 +3620,12 @@ export default function App() {
     if (protectedScreens.includes(next) && !user) {
       setIntendedScreen(next)
       setScreen("login")
-      window.scrollTo({ top: 0, behavior: "smooth" })
+      window.scrollTo({ top: 0 })
       return
     }
     setScreen(next)
-    window.scrollTo({ top: 0, behavior: "smooth" })
+    window.scrollTo({ top: 0 })
+    focusHeading()
   }
   const showResults = (vehicle: AppVehicle, save = true) => {
     setCurrentVehicle(vehicle)
@@ -3713,7 +3745,7 @@ export default function App() {
               loadAccount(loggedUser.id)
               setUser(loggedUser)
               setScreen(intendedScreen)
-              window.scrollTo({ top: 0, behavior: "smooth" })
+              window.scrollTo({ top: 0 })
             }}
             onCancel={() => navigate("home")}
           />

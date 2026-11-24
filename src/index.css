@@ -46,8 +46,46 @@ body,
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
+/* Tokens de movimiento (ver .claude/skills/signal-motion) */
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --dur-press: 120ms;
+  --dur-quick: 160ms;
+  --dur-enter: 220ms;
+  --dur-stagger: 40ms;
+}
+
 * {
   box-sizing: border-box;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+button,
+a,
+[role='tab'] {
+  touch-action: manipulation;
+}
+
+button {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Feedback al presionar: todo lo que se toca responde */
+button:not(:disabled),
+a.press {
+  transition-property: transform, color, background-color, border-color, opacity;
+  transition-duration: var(--dur-press);
+  transition-timing-function: var(--ease-out);
+}
+button:not(:disabled):active,
+a.press:active {
+  transform: scale(0.97);
 }
 
 body {
@@ -143,14 +181,101 @@ select:disabled {
   animation: scan 1.8s linear infinite;
 }
 
+/* Entradas (ver animate-results-reveal y animate-alerts) */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--rise, 8px));
+  }
+}
+@keyframes slide-in-x {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes alert-ring {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.03, 1.12);
+  }
+}
+@keyframes menu-open {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.reveal {
+  animation: rise-in var(--dur-enter) var(--ease-out) both;
+  animation-delay: var(--delay, 0ms);
+}
+.reveal-x {
+  animation: slide-in-x 260ms var(--ease-out) both;
+  animation-delay: var(--delay, 0ms);
+}
+.alert-ring {
+  position: relative;
+}
+.alert-ring::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border: 3px solid #FFC800;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  animation: alert-ring 400ms var(--ease-out) calc(var(--delay, 0ms) + var(--dur-enter)) 1 forwards;
+}
+.menu-open {
+  animation: menu-open var(--dur-enter) var(--ease-out);
+}
+.pop-in {
+  animation: rise-in var(--dur-quick) var(--ease-out) both;
+  --rise: 4px;
+}
+
+/* Indicador deslizante de pestañas */
+.tab-indicator {
+  transition: transform var(--dur-quick) var(--ease-in-out);
+}
+
+/*
+ * Movimiento reducido: menos y más suave, no cero.
+ * Se van los desplazamientos y escalas; quedan los fundidos de opacidad.
+ */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  html {
     scroll-behavior: auto !important;
+  }
+  .reveal,
+  .reveal-x,
+  .pop-in {
+    animation-name: fade-in;
+    animation-delay: 0ms;
+  }
+  .alert-ring::after,
+  .menu-open {
+    animation: none;
+  }
+  .tab-indicator {
+    transition: none;
+  }
+  button:not(:disabled):active,
+  a.press:active {
+    transform: none;
   }
   .scanner-line {
     animation: none;
