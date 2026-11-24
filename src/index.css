@@ -1,6 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap');
 @import 'tailwindcss';
 
 html,
@@ -9,23 +7,43 @@ body,
   height: 100%;
 }
 
+/*
+ * Estética «Señal vial».
+ * - signal (amarillo vial) va SOLO de fondo con texto ink, o como texto sobre ink.
+ * - Los nombres heredados (navy, red, amber…) se mantienen como alias para no
+ *   reescribir cada pantalla; apuntan a la paleta nueva y todos pasan AA.
+ */
 @theme inline {
-  --color-bg: #F4F5F7;
+  --color-ink: #111214;
+  --color-signal: #FFC800;
+  --color-graphite: #4A4F57;
+  --color-line: #C9C6BD;
+  --color-plate: #0B3D91;
+  --color-risk-high: #B3261E;
+  --color-risk-high-light: #FDECEA;
+  --color-risk-mid: #FFB020;
+  --color-risk-mid-text: #8A5300;
+  --color-risk-mid-light: #FFF4DC;
+  --color-ok: #146C36;
+  --color-ok-light: #E5F3EA;
+
+  --color-bg: #F3F2EE;
   --color-surface: #FFFFFF;
-  --color-navy: #0F2348;
-  --color-navy-mid: #1B3A6B;
-  --color-navy-light: #2D5299;
-  --color-red: #D62828;
-  --color-red-light: #F9E8E8;
-  --color-amber: #E07B39;
-  --color-amber-light: #FEF3E9;
-  --color-green: #1A7A4A;
-  --color-green-light: #E6F4EC;
-  --color-muted: #6B7280;
-  --color-border: #E2E6EE;
-  --font-display: 'DM Sans', sans-serif;
-  --font-body: 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --color-navy: #111214;
+  --color-navy-mid: #2A2C30;
+  --color-navy-light: #4A4F57;
+  --color-red: #B3261E;
+  --color-red-light: #FDECEA;
+  --color-amber: #8A5300;
+  --color-amber-light: #FFF4DC;
+  --color-green: #146C36;
+  --color-green-light: #E5F3EA;
+  --color-muted: #4A4F57;
+  --color-border: #C9C6BD;
+
+  --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
 * {
@@ -33,23 +51,78 @@ body,
 }
 
 body {
-  font-family: 'Inter', sans-serif;
-  background-color: #F4F5F7;
-  color: #0F2348;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #F3F2EE;
+  color: #111214;
   -webkit-font-smoothing: antialiased;
 }
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
-button:focus-visible,
-input:focus-visible,
-select:focus-visible {
-  outline: 2px solid #0F2348;
+/* Títulos de cartel vial */
+.font-display {
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+/* Controles de formulario: borde visible (≥ 3:1) */
+input:not([type='checkbox']):not([type='radio']):not(.plate-input),
+select,
+textarea {
+  border-width: 2px;
+  border-color: #111214;
+}
+input::placeholder,
+textarea::placeholder {
+  color: #6B7079;
+  opacity: 1;
+}
+input:disabled,
+select:disabled {
+  border-color: #8D929A;
+}
+
+/* Foco siempre visible */
+:focus-visible {
+  outline: 3px solid #111214;
   outline-offset: 2px;
+}
+.on-dark :focus-visible {
+  outline-color: #FFC800;
+}
+
+/* Franja de peligro (decorativa, estática) */
+.hazard {
+  height: 10px;
+  background: repeating-linear-gradient(-45deg, #111214 0 18px, #FFC800 18px 36px);
+}
+
+/* Sombra dura de las tarjetas destacadas */
+.card-signal {
+  border: 3px solid #111214;
+  box-shadow: 10px 10px 0 #FFC800;
+}
+
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -100px;
+  z-index: 100;
+  background: #FFC800;
+  color: #111214;
+  font-weight: 700;
+  padding: 12px 16px;
+  border: 3px solid #111214;
+  border-radius: 6px;
+}
+.skip-link:focus {
+  top: 12px;
 }
 
 @keyframes scan {
@@ -68,19 +141,38 @@ select:focus-visible {
   animation: scan 1.8s linear infinite;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .scanner-line {
+    animation: none;
+    top: 50%;
+  }
+}
+
+@media print {
+  body {
+    background: #FFFFFF;
+  }
+  .card-signal {
+    box-shadow: none;
+  }
+}
+
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
-  border-radius: 3px;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.overflow-y-auto:hover::-webkit-scrollbar-thumb,
-.overflow-auto:hover::-webkit-scrollbar-thumb {
-  opacity: 1;
+  background: #8D929A;
+  border-radius: 4px;
 }

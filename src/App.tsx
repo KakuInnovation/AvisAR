@@ -186,7 +186,7 @@ function Icon({
 function Badge({ risk }: { risk: Risk }) {
   return (
     <span
-      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-bold tracking-wide ${riskStyles[risk]}`}
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-bold tracking-wide ${riskStyles[risk]}`}
     >
       <span className="size-1.5 rounded-full bg-current" />
       {risk}
@@ -200,7 +200,7 @@ function DemoNotice({
   text?: string
 }) {
   return (
-    <div className="flex items-start gap-2 rounded-lg border border-navy/10 bg-navy/5 px-4 py-3 text-xs text-navy">
+    <div className="flex items-start gap-2 rounded-lg border border-navy/10 bg-navy/5 px-4 py-3 text-sm text-navy">
       <Icon name="info" className="mt-0.5 size-4 shrink-0" />
       <p>
         <strong>Datos de demostración.</strong> {text}
@@ -237,7 +237,7 @@ function RepairProgress({ status }: { status: RepairStatus }) {
       {["Pendiente", "Programada", "Realizada"].map((label, index) => (
         <div key={label} className="text-center">
           <span
-            className={`mx-auto flex size-7 items-center justify-center rounded-full text-xs font-bold ${
+            className={`mx-auto flex size-7 items-center justify-center rounded-full text-sm font-bold ${
               index + 1 <= active
                 ? index === 2
                   ? "bg-green text-white"
@@ -247,7 +247,7 @@ function RepairProgress({ status }: { status: RepairStatus }) {
           >
             {index + 1 < active ? <Icon name="check" className="size-3.5" /> : index + 1}
           </span>
-          <span className="mt-1 block text-[10px] font-bold text-muted">
+          <span className="mt-1 block text-xs font-bold text-muted">
             {label}
           </span>
         </div>
@@ -299,7 +299,7 @@ function NavBar({
             <button
               key={target}
               onClick={() => onNav(target)}
-              className={`cursor-pointer rounded-lg px-3 py-2 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy ${
+              className={`cursor-pointer rounded-lg px-3 py-2 text-base font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy ${
                 screen === target
                   ? "bg-navy text-white"
                   : "text-muted hover:bg-bg hover:text-navy"
@@ -314,12 +314,12 @@ function NavBar({
               <span className="flex size-8 items-center justify-center rounded-full bg-navy/10 text-navy">
                 <Icon name="user" className="size-4" />
               </span>
-              <span className="max-w-28 truncate text-xs font-semibold text-navy">
+              <span className="max-w-28 truncate text-sm font-semibold text-navy">
                 {user.name}
               </span>
               <button
                 onClick={onLogout}
-                className="flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-2 text-xs font-semibold text-muted hover:bg-bg hover:text-navy"
+                className="flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-2 text-sm font-semibold text-muted hover:bg-bg hover:text-navy"
               >
                 <Icon name="logout" className="size-4" />
                 Salir
@@ -328,7 +328,7 @@ function NavBar({
           ) : (
             <button
               onClick={onLogin}
-              className="flex cursor-pointer items-center gap-2 rounded-lg bg-navy px-4 py-2 text-sm font-bold text-white hover:bg-navy-mid"
+              className="flex cursor-pointer items-center gap-2 rounded-lg bg-navy px-4 py-2 text-base font-bold text-white hover:bg-navy-mid"
             >
               <Icon name="user" className="size-4" />
               Ingresar
@@ -337,7 +337,7 @@ function NavBar({
         </nav>
         <button
           onClick={user ? onLogout : onLogin}
-          className="flex cursor-pointer items-center gap-2 rounded-lg bg-navy px-3 py-2 text-xs font-bold text-white md:hidden"
+          className="flex cursor-pointer items-center gap-2 rounded-lg bg-navy px-3 py-2 text-sm font-bold text-white md:hidden"
         >
           <Icon name={user ? "logout" : "user"} className="size-4" />
           {user ? "Salir" : "Ingresar"}
@@ -351,7 +351,7 @@ function NavBar({
           <button
             key={target}
             onClick={() => onNav(target)}
-            className={`shrink-0 cursor-pointer border-b-2 px-3 py-2.5 text-xs font-semibold ${
+            className={`shrink-0 cursor-pointer border-b-2 px-3 py-2.5 text-sm font-semibold ${
               screen === target
                 ? "border-red text-navy"
                 : "border-transparent text-muted"
@@ -444,7 +444,7 @@ function HomeScreen({
       <section className="border-b border-border bg-white">
         <div className="mx-auto grid max-w-6xl gap-10 px-5 py-12 lg:grid-cols-[1.05fr_.95fr] lg:py-16">
           <div className="self-center">
-            <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-green-light px-3 py-1.5 text-xs font-bold text-green">
+            <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-green-light px-3 py-1.5 text-sm font-bold text-green">
               <span className="size-1.5 rounded-full bg-green" />
               Gratuito · Multimarca · Sin registro
             </span>
@@ -467,7 +467,7 @@ function HomeScreen({
                   <div className="font-display text-xl font-bold text-navy">
                     {number}
                   </div>
-                  <div className="text-xs text-muted">{label}</div>
+                  <div className="text-sm text-muted">{label}</div>
                 </div>
               ))}
             </div>
@@ -479,13 +479,13 @@ function HomeScreen({
                 <h2 className="font-display text-xl font-bold text-navy">
                   Consultá tu vehículo
                 </h2>
-                <p className="mt-1 text-sm text-muted">
+                <p className="mt-1 text-base text-muted">
                   Elegí la opción que te resulte más fácil.
                 </p>
               </div>
               <button
                 onClick={clear}
-                className="cursor-pointer text-xs font-semibold text-muted underline decoration-border underline-offset-4 hover:text-navy"
+                className="cursor-pointer text-sm font-semibold text-muted underline decoration-border underline-offset-4 hover:text-navy"
               >
                 Limpiar
               </button>
@@ -504,7 +504,7 @@ function HomeScreen({
                     setError("")
                     setNotFound(false)
                   }}
-                  className={`cursor-pointer rounded-md px-2 py-2 text-xs font-bold transition ${
+                  className={`cursor-pointer rounded-md px-2 py-2 text-sm font-bold transition ${
                     mode === value
                       ? "bg-white text-navy shadow-sm"
                       : "text-muted hover:text-navy"
@@ -518,7 +518,7 @@ function HomeScreen({
             <div className="mt-5 min-h-32">
               {mode === "plate" && (
                 <label className="block">
-                  <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-navy">
+                  <span className="mb-2 block text-sm font-bold uppercase tracking-wide text-navy">
                     Patente
                   </span>
                   <div className="flex gap-2">
@@ -538,7 +538,7 @@ function HomeScreen({
                     />
                     <button
                       onClick={() => onNav("scanner")}
-                      className="flex cursor-pointer items-center gap-2 rounded-lg bg-navy px-4 text-sm font-bold text-white transition hover:bg-navy-mid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy"
+                      className="flex cursor-pointer items-center gap-2 rounded-lg bg-navy px-4 text-base font-bold text-white transition hover:bg-navy-mid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy"
                     >
                       <Icon name="camera" className="size-5" />
                       <span className="hidden sm:inline">Escanear</span>
@@ -546,7 +546,7 @@ function HomeScreen({
                   </div>
                   <span
                     id="plate-help"
-                    className="mt-2 block text-xs text-muted"
+                    className="mt-2 block text-sm text-muted"
                   >
                     Formato Mercosur o anterior. También podés escanear la
                     cédula verde.
@@ -555,7 +555,7 @@ function HomeScreen({
               )}
               {mode === "vin" && (
                 <label className="block">
-                  <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-navy">
+                  <span className="mb-2 block text-sm font-bold uppercase tracking-wide text-navy">
                     Número VIN
                   </span>
                   <input
@@ -571,7 +571,7 @@ function HomeScreen({
                     placeholder="8AGF19U0BCR123456"
                     className="w-full rounded-lg border border-border px-4 py-3 font-mono uppercase tracking-wider outline-none transition focus:border-navy focus:ring-2 focus:ring-navy/10"
                   />
-                  <div className="mt-2 flex justify-between gap-3 text-xs">
+                  <div className="mt-2 flex justify-between gap-3 text-sm">
                     <span className="text-muted">
                       Está en la cédula verde o junto al parabrisas.
                     </span>
@@ -590,7 +590,7 @@ function HomeScreen({
               {mode === "data" && (
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label>
-                    <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-navy">
+                    <span className="mb-2 block text-sm font-bold uppercase tracking-wide text-navy">
                       Marca
                     </span>
                     <select
@@ -601,7 +601,7 @@ function HomeScreen({
                         setVersion("")
                         setYear("")
                       }}
-                      className="w-full rounded-lg border border-border bg-white px-3 py-3 text-sm outline-none focus:border-navy focus:ring-2 focus:ring-navy/10"
+                      className="w-full rounded-lg border border-border bg-white px-3 py-3 text-base outline-none focus:border-navy focus:ring-2 focus:ring-navy/10"
                     >
                       <option value="">Elegir</option>
                       {brands().map((item) => (
@@ -610,7 +610,7 @@ function HomeScreen({
                     </select>
                   </label>
                   <label>
-                    <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-navy">
+                    <span className="mb-2 block text-sm font-bold uppercase tracking-wide text-navy">
                       Modelo
                     </span>
                     <select
@@ -621,7 +621,7 @@ function HomeScreen({
                         setVersion("")
                         setYear("")
                       }}
-                      className="w-full rounded-lg border border-border bg-white px-3 py-3 text-sm outline-none disabled:cursor-not-allowed disabled:bg-bg disabled:text-muted focus:border-navy"
+                      className="w-full rounded-lg border border-border bg-white px-3 py-3 text-base outline-none disabled:cursor-not-allowed disabled:bg-bg disabled:text-muted focus:border-navy"
                     >
                       <option value="">Elegir</option>
                       {modelsOf(brand).map((item) => (
@@ -630,7 +630,7 @@ function HomeScreen({
                     </select>
                   </label>
                   <label>
-                    <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-navy">
+                    <span className="mb-2 block text-sm font-bold uppercase tracking-wide text-navy">
                       Versión
                     </span>
                     <select
@@ -640,7 +640,7 @@ function HomeScreen({
                         setVersion(event.target.value)
                         setYear("")
                       }}
-                      className="w-full rounded-lg border border-border bg-white px-3 py-3 text-sm outline-none disabled:cursor-not-allowed disabled:bg-bg disabled:text-muted focus:border-navy"
+                      className="w-full rounded-lg border border-border bg-white px-3 py-3 text-base outline-none disabled:cursor-not-allowed disabled:bg-bg disabled:text-muted focus:border-navy"
                     >
                       <option value="">Elegir</option>
                       {versionsOf(brand, model).map((item) => (
@@ -649,14 +649,14 @@ function HomeScreen({
                     </select>
                   </label>
                   <label>
-                    <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-navy">
+                    <span className="mb-2 block text-sm font-bold uppercase tracking-wide text-navy">
                       Año
                     </span>
                     <select
                       value={year}
                       disabled={!version}
                       onChange={(event) => setYear(event.target.value)}
-                      className="w-full rounded-lg border border-border bg-white px-3 py-3 text-sm outline-none disabled:cursor-not-allowed disabled:bg-bg disabled:text-muted focus:border-navy"
+                      className="w-full rounded-lg border border-border bg-white px-3 py-3 text-base outline-none disabled:cursor-not-allowed disabled:bg-bg disabled:text-muted focus:border-navy"
                     >
                       <option value="">Elegir</option>
                       {yearsOf(brand, model).map((item) => (
@@ -671,7 +671,7 @@ function HomeScreen({
             {error && (
               <div
                 role="alert"
-                className="mb-3 flex items-center gap-2 rounded-lg bg-red-light px-3 py-2 text-xs font-semibold text-red"
+                className="mb-3 flex items-center gap-2 rounded-lg bg-red-light px-3 py-2 text-sm font-semibold text-red"
               >
                 <Icon name="alert" className="size-4" />
                 {error}
@@ -682,7 +682,7 @@ function HomeScreen({
                 role="status"
                 className="mb-3 rounded-xl border border-dashed border-border bg-white px-5 py-6 text-center"
               >
-                <p className="text-sm leading-relaxed text-muted">
+                <p className="text-base leading-relaxed text-muted">
                   No encontramos ese vehículo en la base de demostración. Probá
                   con AB 123 CD, AD 456 EF o AA 000 AA, o buscá por marca y
                   modelo.
@@ -693,7 +693,7 @@ function HomeScreen({
                     setNotFound(false)
                     setError("")
                   }}
-                  className="mt-4 cursor-pointer rounded-lg bg-navy px-5 py-2.5 text-xs font-bold text-white hover:bg-navy-mid"
+                  className="mt-4 cursor-pointer rounded-lg bg-navy px-5 py-2.5 text-sm font-bold text-white hover:bg-navy-mid"
                 >
                   Buscar por marca y modelo
                 </button>
@@ -702,7 +702,7 @@ function HomeScreen({
             <button
               onClick={() => submit()}
               disabled={loading}
-              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red py-3.5 text-sm font-bold text-white transition hover:bg-red/90 disabled:cursor-wait disabled:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red"
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red py-3.5 text-base font-bold text-white transition hover:bg-red/90 disabled:cursor-wait disabled:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red"
             >
               {loading ? (
                 <>
@@ -724,14 +724,14 @@ function HomeScreen({
         <section className="mx-auto max-w-6xl px-5 py-12">
           <div className="mb-6 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-red">
+              <p className="text-sm font-bold uppercase tracking-widest text-red">
                 Mis vehículos
               </p>
               <h2 className="mt-1 font-display text-2xl font-bold text-navy">
                 Estado de tus vehículos
               </h2>
             </div>
-            <p className="max-w-md text-sm text-muted">
+            <p className="max-w-md text-base text-muted">
               Accedé rápidamente a la información de seguridad asociada a tu
               cuenta.
             </p>
@@ -770,17 +770,17 @@ function HomeScreen({
                 >
                   <div className="flex items-start justify-between">
                     <Icon name="car" className="size-6 text-navy" />
-                    <span className="font-mono text-xs font-bold text-muted">
+                    <span className="font-mono text-sm font-bold text-muted">
                       {vehicle.plate}
                     </span>
                   </div>
                   <h3 className="mt-5 font-display text-lg font-bold text-navy">
                     {vehicle.brand} {vehicle.model}
                   </h3>
-                  <p className="mt-1 text-sm text-muted">
+                  <p className="mt-1 text-base text-muted">
                     {vehicle.version} · {vehicle.year}
                   </p>
-                  <p className="mt-4 text-xs font-bold uppercase tracking-wide text-muted">
+                  <p className="mt-4 text-sm font-bold uppercase tracking-wide text-muted">
                     {title}
                   </p>
                 </button>
@@ -819,7 +819,7 @@ function ScannerScreen({
       <h1 className="font-display text-3xl font-bold text-navy">
         Escanear patente
       </h1>
-      <p className="mt-2 text-sm leading-relaxed text-muted">
+      <p className="mt-2 text-base leading-relaxed text-muted">
         Apuntá a la patente o a la cédula verde. Esta cámara es una simulación
         interactiva del reconocimiento.
       </p>
@@ -830,7 +830,7 @@ function ScannerScreen({
             <span className="scanner-line absolute left-0 right-0 h-0.5 bg-red shadow-lg" />
           )}
           {phase === "idle" && (
-            <p className="text-sm font-semibold text-white/60">
+            <p className="text-base font-semibold text-white/60">
               Encuadrá la patente aquí
             </p>
           )}
@@ -847,7 +847,7 @@ function ScannerScreen({
       {phase === "found" ? (
         <button
           onClick={onDetected}
-          className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-green py-3.5 text-sm font-bold text-white hover:bg-green/90"
+          className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-green py-3.5 text-base font-bold text-white hover:bg-green/90"
         >
           <Icon name="check" className="size-4" />
           Confirmar y consultar
@@ -856,7 +856,7 @@ function ScannerScreen({
         <button
           onClick={scan}
           disabled={phase === "scanning"}
-          className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-navy py-3.5 text-sm font-bold text-white disabled:cursor-wait disabled:opacity-70"
+          className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-navy py-3.5 text-base font-bold text-white disabled:cursor-wait disabled:opacity-70"
         >
           <Icon name="camera" className="size-5" />
           {phase === "scanning" ? "Detectando patente…" : "Iniciar escaneo"}
@@ -912,7 +912,7 @@ function ResultsScreen({
             />
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest opacity-75">
+            <p className="text-sm font-bold uppercase tracking-widest opacity-75">
               {vehicle.brand} {vehicle.model} {vehicle.version} {vehicle.year} ·{" "}
               {vehicle.plate}
             </p>
@@ -925,7 +925,7 @@ function ResultsScreen({
                       : "recalls requieren"
                   } tu atención`}
             </h1>
-            <p className="mt-2 max-w-2xl text-sm opacity-80">
+            <p className="mt-2 max-w-2xl text-base opacity-80">
               {vehicle.recalls.length === 0
                 ? "Podés quedarte tranquilo. Activá una alerta y te avisaremos si aparece una campaña nueva."
                 : "Revisá cada campaña y priorizá las de mayor riesgo. Las reparaciones de recall son gratuitas."}
@@ -938,14 +938,14 @@ function ResultsScreen({
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <button
             onClick={() => onNav("subscribe")}
-            className="flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-navy py-3.5 text-sm font-bold text-white hover:bg-navy-mid"
+            className="flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-navy py-3.5 text-base font-bold text-white hover:bg-navy-mid"
           >
             <Icon name="bell" className="size-4" />
             Activar alerta preventiva
           </button>
           <button
             onClick={() => onNav("queries")}
-            className="cursor-pointer rounded-lg border border-border bg-white py-3.5 text-sm font-bold text-navy hover:border-navy"
+            className="cursor-pointer rounded-lg border border-border bg-white py-3.5 text-base font-bold text-navy hover:border-navy"
           >
             Ver mis consultas
           </button>
@@ -954,7 +954,7 @@ function ResultsScreen({
         <>
           <div className="mt-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-muted">
+              <p className="text-sm font-bold uppercase tracking-widest text-muted">
                 Campañas encontradas
               </p>
               <h2 className="mt-1 font-display text-xl font-bold text-navy">
@@ -969,7 +969,7 @@ function ResultsScreen({
                 <button
                   key={item}
                   onClick={() => setFilter(item)}
-                  className={`cursor-pointer rounded-full border px-3 py-1.5 text-xs font-bold transition ${
+                  className={`cursor-pointer rounded-full border px-3 py-1.5 text-sm font-bold transition ${
                     filter === item
                       ? "border-navy bg-navy text-white"
                       : "border-border bg-white text-muted hover:border-navy hover:text-navy"
@@ -988,36 +988,36 @@ function ResultsScreen({
               >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="font-mono text-xs text-muted">
+                    <p className="font-mono text-sm text-muted">
                       {recall.campaign}
                     </p>
                     <h3 className="mt-2 font-display text-lg font-bold text-navy">
                       {recall.title}
                     </h3>
-                    <p className="mt-1 text-sm font-semibold text-navy-mid">
+                    <p className="mt-1 text-base font-semibold text-navy-mid">
                       {recall.component}
                     </p>
                   </div>
                   <Badge risk={recall.risk} />
                 </div>
-                <p className="mt-4 text-sm leading-relaxed text-muted">
+                <p className="mt-4 text-base leading-relaxed text-muted">
                   {recall.description}
                 </p>
-                <p className="mt-4 flex items-center gap-2 text-xs font-bold text-green">
+                <p className="mt-4 flex items-center gap-2 text-sm font-bold text-green">
                   <Icon name="check" className="size-4" />
                   Reparación gratuita en concesionario oficial
                 </p>
                 <div className="mt-5 flex flex-wrap gap-3">
                   <button
                     onClick={() => onDetail(recall)}
-                    className="flex cursor-pointer items-center gap-2 text-sm font-bold text-navy hover:text-red"
+                    className="flex cursor-pointer items-center gap-2 text-base font-bold text-navy hover:text-red"
                   >
                     Ver detalle
                     <Icon name="arrow" className="size-4" />
                   </button>
                   <button
                     onClick={() => onBook(recall)}
-                    className="flex cursor-pointer items-center gap-2 rounded-lg bg-red px-4 py-2 text-xs font-bold text-white hover:bg-red/90"
+                    className="flex cursor-pointer items-center gap-2 rounded-lg bg-red px-4 py-2 text-sm font-bold text-white hover:bg-red/90"
                   >
                     <Icon name="calendar" className="size-4" />
                     Reservar turno
@@ -1029,13 +1029,13 @@ function ResultsScreen({
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <button
               onClick={() => onNav("home")}
-              className="flex-1 cursor-pointer rounded-lg border border-border bg-white py-3 text-sm font-bold text-navy hover:border-navy"
+              className="flex-1 cursor-pointer rounded-lg border border-border bg-white py-3 text-base font-bold text-navy hover:border-navy"
             >
               Realizar nueva consulta
             </button>
             <button
               onClick={() => onNav("subscribe")}
-              className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-navy py-3 text-sm font-bold text-white hover:bg-navy-mid"
+              className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-navy py-3 text-base font-bold text-white hover:bg-navy-mid"
             >
               <Icon name="bell" className="size-4" />
               Activar alertas
@@ -1092,16 +1092,16 @@ function DetailScreen({
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <Badge risk={recall.risk} />
-            <span className="font-mono text-xs text-muted">{recall.id}</span>
+            <span className="font-mono text-sm text-muted">{recall.id}</span>
           </div>
           <h1 className="mt-4 font-display text-3xl font-bold text-navy">
             {recall.title}
           </h1>
-          <p className="mt-2 text-sm font-semibold text-navy-mid">
+          <p className="mt-2 text-base font-semibold text-navy-mid">
             Componente: {recall.component}
           </p>
         </div>
-        <span className="text-xs text-muted">Publicada el {recall.date}</span>
+        <span className="text-sm text-muted">Publicada el {recall.date}</span>
       </div>
 
       <div className="mt-8 grid gap-5 lg:grid-cols-[1fr_.85fr]">
@@ -1126,9 +1126,9 @@ function DetailScreen({
                 />
                 {title}
               </h2>
-              <p className="mt-3 text-sm leading-relaxed text-muted">{text}</p>
+              <p className="mt-3 text-base leading-relaxed text-muted">{text}</p>
               {index === 2 && (
-                <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-green-light px-3 py-1.5 text-xs font-bold text-green">
+                <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-green-light px-3 py-1.5 text-sm font-bold text-green">
                   <Icon name="check" className="size-3.5" />
                   Reparación 100% gratuita
                 </span>
@@ -1139,15 +1139,15 @@ function DetailScreen({
             <h2 className="font-display text-base font-bold text-navy">
               Datos de la campaña
             </h2>
-            <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
+            <dl className="mt-4 grid gap-4 text-base sm:grid-cols-2">
               <div>
-                <dt className="text-xs text-muted">Código oficial</dt>
+                <dt className="text-sm text-muted">Código oficial</dt>
                 <dd className="mt-1 font-mono font-semibold text-navy">
                   {recall.campaign}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-muted">Contacto gratuito</dt>
+                <dt className="text-sm text-muted">Contacto gratuito</dt>
                 <dd className="mt-1 font-mono font-semibold text-navy">
                   {recall.contact}
                 </dd>
@@ -1157,13 +1157,13 @@ function DetailScreen({
         </div>
 
         <aside className="h-fit rounded-2xl border border-border bg-white p-6 lg:sticky lg:top-24">
-          <p className="text-xs font-bold uppercase tracking-widest text-red">
+          <p className="text-sm font-bold uppercase tracking-widest text-red">
             Seguimiento personal
           </p>
           <h2 className="mt-2 font-display text-xl font-bold text-navy">
             Estado de mi vehículo
           </h2>
-          <p className="mt-2 text-sm leading-relaxed text-muted">
+          <p className="mt-2 text-base leading-relaxed text-muted">
             {isLoggedIn
               ? "Guardá tu avance para saber cuál es el próximo paso."
               : "Ingresá para ver y actualizar el estado de este vehículo."}
@@ -1172,30 +1172,30 @@ function DetailScreen({
             <>
               {appointment?.status === "Programado" ? (
                 <div className="mt-5 rounded-xl border border-amber/25 bg-amber-light p-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-amber">
+                  <p className="text-sm font-bold uppercase tracking-wide text-amber">
                     Turno programado
                   </p>
                   <p className="mt-2 font-display font-bold text-navy">
                     {formatAppointmentDate(appointment.date)} · {appointment.time} h
                   </p>
-                  <p className="mt-1 text-xs text-muted">
+                  <p className="mt-1 text-sm text-muted">
                     {dealerFor(appointment.dealerId)?.name}
                   </p>
                   <button
                     onClick={onViewAppointment}
-                    className="mt-3 cursor-pointer text-xs font-bold text-navy underline underline-offset-4"
+                    className="mt-3 cursor-pointer text-sm font-bold text-navy underline underline-offset-4"
                   >
                     Ver turno
                   </button>
                 </div>
               ) : appointment?.status === "Realizado" ? (
-                <div className="mt-5 rounded-xl bg-green-light p-4 text-sm font-bold text-green">
+                <div className="mt-5 rounded-xl bg-green-light p-4 text-base font-bold text-green">
                   Reparación realizada · alerta cerrada para esta campaña
                 </div>
               ) : (
                 <button
                   onClick={onBook}
-                  className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red py-3 text-sm font-bold text-white hover:bg-red/90"
+                  className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red py-3 text-base font-bold text-white hover:bg-red/90"
                 >
                   <Icon name="calendar" className="size-4" />
                   Reservar turno de reparación
@@ -1205,20 +1205,20 @@ function DetailScreen({
               {appointment?.status === "Programado" &&
                 appointmentIsPast(appointment) && (
                   <div className="mt-5 rounded-xl border border-border bg-bg p-4">
-                    <p className="text-sm font-bold text-navy">
+                    <p className="text-base font-bold text-navy">
                       ¿Se realizó la reparación en tu turno del{" "}
                       {formatAppointmentDate(appointment.date)}?
                     </p>
                     <div className="mt-3 grid gap-2">
                       <button
                         onClick={onCompleteAppointment}
-                        className="cursor-pointer rounded-lg bg-green px-3 py-2.5 text-xs font-bold text-white"
+                        className="cursor-pointer rounded-lg bg-green px-3 py-2.5 text-sm font-bold text-white"
                       >
                         Sí, ya lo reparé
                       </button>
                       <button
                         onClick={onReprogramAppointment}
-                        className="cursor-pointer rounded-lg border border-border bg-white px-3 py-2.5 text-xs font-bold text-navy"
+                        className="cursor-pointer rounded-lg border border-border bg-white px-3 py-2.5 text-sm font-bold text-navy"
                       >
                         No, reprogramar
                       </button>
@@ -1234,7 +1234,7 @@ function DetailScreen({
                   <button
                     key={item}
                     onClick={() => update(item)}
-                    className={`flex w-full cursor-pointer items-center gap-3 rounded-lg border p-3 text-left text-sm font-semibold transition ${
+                    className={`flex w-full cursor-pointer items-center gap-3 rounded-lg border p-3 text-left text-base font-semibold transition ${
                       status === item
                         ? item === "Reparación realizada"
                           ? "border-green bg-green-light text-green"
@@ -1243,7 +1243,7 @@ function DetailScreen({
                     }`}
                   >
                     <span
-                      className={`flex size-6 items-center justify-center rounded-full text-xs ${
+                      className={`flex size-6 items-center justify-center rounded-full text-sm ${
                         status === item
                           ? "bg-current text-white"
                           : "bg-bg text-muted"
@@ -1260,13 +1260,13 @@ function DetailScreen({
               {saved && (
                 <div
                   role="status"
-                  className="mt-4 flex items-center gap-2 rounded-lg bg-green-light px-3 py-2 text-xs font-bold text-green"
+                  className="mt-4 flex items-center gap-2 rounded-lg bg-green-light px-3 py-2 text-sm font-bold text-green"
                 >
                   <Icon name="check" className="size-4" />
                   Estado guardado en tu cuenta
                 </div>
               )}
-              <p className="mt-4 text-xs leading-relaxed text-muted">
+              <p className="mt-4 text-sm leading-relaxed text-muted">
                 Este seguimiento es personal y no representa una certificación
                 oficial del fabricante.
               </p>
@@ -1276,15 +1276,15 @@ function DetailScreen({
               <span className="mx-auto flex size-11 items-center justify-center rounded-full bg-white text-navy">
                 <Icon name="lock" className="size-5" />
               </span>
-              <p className="mt-3 text-sm font-bold text-navy">
+              <p className="mt-3 text-base font-bold text-navy">
                 Información privada
               </p>
-              <p className="mt-1 text-xs leading-relaxed text-muted">
+              <p className="mt-1 text-sm leading-relaxed text-muted">
                 Los estados sólo están disponibles para el titular de la cuenta.
               </p>
               <button
                 onClick={onLogin}
-                className="mt-4 w-full cursor-pointer rounded-lg bg-navy py-3 text-sm font-bold text-white hover:bg-navy-mid"
+                className="mt-4 w-full cursor-pointer rounded-lg bg-navy py-3 text-base font-bold text-white hover:bg-navy-mid"
               >
                 Ingresar para continuar
               </button>
@@ -1293,7 +1293,7 @@ function DetailScreen({
           {isLoggedIn && (
             <button
               onClick={onSubscribe}
-              className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-navy py-3 text-sm font-bold text-white hover:bg-navy-mid"
+              className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-navy py-3 text-base font-bold text-white hover:bg-navy-mid"
             >
               <Icon name="bell" className="size-4" />
               Recibir novedades
@@ -1322,13 +1322,13 @@ function QueriesScreen({
 }) {
   return (
     <main className="mx-auto max-w-5xl px-5 py-10">
-      <p className="text-xs font-bold uppercase tracking-widest text-red">
+      <p className="text-sm font-bold uppercase tracking-widest text-red">
         Historial de tu cuenta
       </p>
       <h1 className="mt-2 font-display text-3xl font-bold text-navy">
         Mis consultas
       </h1>
-      <p className="mt-2 text-sm text-muted">
+      <p className="mt-2 text-base text-muted">
         Volvé a revisar los vehículos que consultaste con tu cuenta.
       </p>
       {queries.length === 0 ? (
@@ -1363,16 +1363,16 @@ function QueriesScreen({
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="font-mono text-sm font-bold tracking-wider text-navy">
+                    <p className="font-mono text-base font-bold tracking-wider text-navy">
                       {vehicle.plate}
                     </p>
                     <h2 className="mt-2 font-display text-lg font-bold text-navy">
                       {vehicle.brand} {vehicle.model}
                     </h2>
-                    <p className="text-sm text-muted">
+                    <p className="text-base text-muted">
                       {vehicle.version} · {vehicle.year}
                     </p>
-                    <p className="mt-1 text-xs text-muted">
+                    <p className="mt-1 text-sm text-muted">
                       Consultado el {vehicle.consultedAt}
                     </p>
                   </div>
@@ -1395,7 +1395,7 @@ function QueriesScreen({
                     }
                   />
                 </div>
-                <div className="mt-5 rounded-lg bg-bg px-3 py-2 text-sm font-semibold text-navy">
+                <div className="mt-5 rounded-lg bg-bg px-3 py-2 text-base font-semibold text-navy">
                   {vehicle.recalls.length === 0
                     ? "Sin recalls detectados"
                     : `${vehicle.recalls.length} ${
@@ -1405,7 +1405,7 @@ function QueriesScreen({
                       }`}
                 </div>
                 {appointment && (
-                  <p className="mt-3 flex items-center gap-2 text-xs font-bold text-amber">
+                  <p className="mt-3 flex items-center gap-2 text-sm font-bold text-amber">
                     <Icon name="calendar" className="size-4" />
                     Turno: {formatAppointmentDate(appointment.date, true)} ·{" "}
                     {appointment.time} h
@@ -1414,7 +1414,7 @@ function QueriesScreen({
                 <div className="mt-4 flex gap-2">
                   <button
                     onClick={() => onRepeat(vehicle)}
-                    className="flex-1 cursor-pointer rounded-lg bg-navy px-3 py-2.5 text-xs font-bold text-white hover:bg-navy-mid"
+                    className="flex-1 cursor-pointer rounded-lg bg-navy px-3 py-2.5 text-sm font-bold text-white hover:bg-navy-mid"
                   >
                     Consultar nuevamente
                   </button>
@@ -1488,17 +1488,17 @@ function SubscribeScreen({
         <h1 className="mt-6 font-display text-3xl font-bold text-navy">
           Alerta activada
         </h1>
-        <p className="mt-3 text-sm leading-relaxed text-muted">
+        <p className="mt-3 text-base leading-relaxed text-muted">
           Te avisaremos por {channel} a <strong>{destination}</strong> si
           aparece una nueva campaña para <strong>{plate}</strong>.
         </p>
-        <p className="mt-3 text-xs text-muted">
+        <p className="mt-3 text-sm text-muted">
           Esta suscripción es una simulación: el prototipo no envía mensajes
           reales.
         </p>
         <button
           onClick={onAlerts}
-          className="mt-8 cursor-pointer rounded-lg bg-navy px-7 py-3 text-sm font-bold text-white hover:bg-navy-mid"
+          className="mt-8 cursor-pointer rounded-lg bg-navy px-7 py-3 text-base font-bold text-white hover:bg-navy-mid"
         >
           Ver mis alertas
         </button>
@@ -1507,33 +1507,33 @@ function SubscribeScreen({
   }
   return (
     <main className="mx-auto max-w-2xl px-5 py-10">
-      <p className="text-xs font-bold uppercase tracking-widest text-red">
+      <p className="text-sm font-bold uppercase tracking-widest text-red">
         Alertas preventivas
       </p>
       <h1 className="mt-2 font-display text-3xl font-bold text-navy">
         Activar una alerta
       </h1>
-      <p className="mt-2 text-sm text-muted">
+      <p className="mt-2 text-base text-muted">
         Elegí cómo querés recibir novedades. No necesitás instalar una app.
       </p>
       <div className="mt-7 rounded-2xl border border-border bg-white p-6">
         {vehicle && (
           <div className="mb-6 rounded-xl bg-bg p-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-muted">
+            <p className="text-sm font-bold uppercase tracking-wide text-muted">
               Vehículo asociado
             </p>
             <div className="mt-2 flex items-center justify-between gap-3">
               <p className="font-display font-bold text-navy">
                 {vehicle.brand} {vehicle.model} {vehicle.version} {vehicle.year}
               </p>
-              <p className="font-mono text-sm font-bold text-navy">
+              <p className="font-mono text-base font-bold text-navy">
                 {vehicle.plate}
               </p>
             </div>
           </div>
         )}
         <label className="block">
-          <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-navy">
+          <span className="mb-2 block text-sm font-bold uppercase tracking-wide text-navy">
             Patente
           </span>
           <input
@@ -1544,7 +1544,7 @@ function SubscribeScreen({
           />
         </label>
         <fieldset className="mt-5">
-          <legend className="mb-2 text-xs font-bold uppercase tracking-wide text-navy">
+          <legend className="mb-2 text-sm font-bold uppercase tracking-wide text-navy">
             Canal de notificación
           </legend>
           <div className="grid grid-cols-2 gap-3">
@@ -1556,7 +1556,7 @@ function SubscribeScreen({
                   setDestination("")
                   setError("")
                 }}
-                className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border py-3 text-sm font-bold ${
+                className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border py-3 text-base font-bold ${
                   channel === item
                     ? item === "WhatsApp"
                       ? "border-green bg-green text-white"
@@ -1574,7 +1574,7 @@ function SubscribeScreen({
           </div>
         </fieldset>
         <label className="mt-5 block">
-          <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-navy">
+          <span className="mb-2 block text-sm font-bold uppercase tracking-wide text-navy">
             {channel === "WhatsApp" ? "Número de WhatsApp" : "E-mail"}
           </span>
           <input
@@ -1589,13 +1589,13 @@ function SubscribeScreen({
                 ? "+54 9 11 1234-5678"
                 : "nombre@ejemplo.com"
             }
-            className="w-full rounded-lg border border-border px-4 py-3 text-sm outline-none focus:border-navy focus:ring-2 focus:ring-navy/10"
+            className="w-full rounded-lg border border-border px-4 py-3 text-base outline-none focus:border-navy focus:ring-2 focus:ring-navy/10"
           />
         </label>
         {error && (
           <p
             role="alert"
-            className="mt-3 flex items-center gap-2 text-xs font-bold text-red"
+            className="mt-3 flex items-center gap-2 text-sm font-bold text-red"
           >
             <Icon name="alert" className="size-4" />
             {error}
@@ -1603,12 +1603,12 @@ function SubscribeScreen({
         )}
         <button
           onClick={submit}
-          className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red py-3.5 text-sm font-bold text-white hover:bg-red/90"
+          className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red py-3.5 text-base font-bold text-white hover:bg-red/90"
         >
           <Icon name="bell" className="size-4" />
           Activar alerta
         </button>
-        <p className="mt-4 text-center text-xs text-muted">
+        <p className="mt-4 text-center text-sm text-muted">
           Simulación local. No se realizarán envíos reales ni compartiremos tus
           datos.
         </p>
@@ -1645,19 +1645,19 @@ function MyAlertsScreen({
     <main className="mx-auto max-w-5xl px-5 py-10">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-red">
+          <p className="text-sm font-bold uppercase tracking-widest text-red">
             Suscripciones de tu cuenta
           </p>
           <h1 className="mt-2 font-display text-3xl font-bold text-navy">
             Mis alertas
           </h1>
-          <p className="mt-2 text-sm text-muted">
+          <p className="mt-2 text-base text-muted">
             Gestioná las alertas asociadas a tus vehículos.
           </p>
         </div>
         <button
           onClick={onSubscribe}
-          className="flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-navy px-5 py-3 text-sm font-bold text-white hover:bg-navy-mid"
+          className="flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-navy px-5 py-3 text-base font-bold text-white hover:bg-navy-mid"
         >
           <Icon name="bell" className="size-4" />
           Nueva alerta
@@ -1666,7 +1666,7 @@ function MyAlertsScreen({
       {message && (
         <div
           role="status"
-          className="mt-5 flex items-center gap-2 rounded-lg bg-green-light px-4 py-3 text-sm font-semibold text-green"
+          className="mt-5 flex items-center gap-2 rounded-lg bg-green-light px-4 py-3 text-base font-semibold text-green"
         >
           <Icon name="check" className="size-4" />
           {message}
@@ -1706,7 +1706,7 @@ function MyAlertsScreen({
                       {alert.vehicle}
                     </h2>
                     <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+                      className={`rounded-full px-2 py-0.5 text-sm font-bold ${
                         alert.active
                           ? "bg-green-light text-green"
                           : "bg-bg text-muted"
@@ -1715,10 +1715,10 @@ function MyAlertsScreen({
                       {alert.active ? "Activa" : "Desactivada"}
                     </span>
                   </div>
-                  <p className="mt-1 font-mono text-xs font-semibold text-navy">
+                  <p className="mt-1 font-mono text-sm font-semibold text-navy">
                     {alert.plate}
                   </p>
-                  <p className="mt-2 text-xs text-muted">
+                  <p className="mt-2 text-sm text-muted">
                     {alert.channel} · {alert.destination}
                   </p>
                 </div>
@@ -1726,7 +1726,7 @@ function MyAlertsScreen({
               <div className="flex gap-2">
                 <button
                   onClick={() => toggle(alert)}
-                  className={`cursor-pointer rounded-lg border px-4 py-2.5 text-xs font-bold transition ${
+                  className={`cursor-pointer rounded-lg border px-4 py-2.5 text-sm font-bold transition ${
                     alert.active
                       ? "border-red/25 text-red hover:bg-red-light"
                       : "border-green/25 text-green hover:bg-green-light"
@@ -1767,12 +1767,12 @@ function DealerMap({ dealer, number }: { dealer: AppDealer; number: number }) {
         className="min-h-80 w-full flex-1 border-0 bg-bg"
       />
       <div className="flex flex-wrap items-center gap-3 border-t border-border p-4">
-        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-red text-xs font-bold text-white">
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-red text-sm font-bold text-white">
           {number}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="font-display text-sm font-bold text-navy">{dealer.name}</p>
-          <p className="text-xs text-muted">
+          <p className="font-display text-base font-bold text-navy">{dealer.name}</p>
+          <p className="text-sm text-muted">
             {dealer.address} · {dealer.neighborhood}
           </p>
         </div>
@@ -1780,7 +1780,7 @@ function DealerMap({ dealer, number }: { dealer: AppDealer; number: number }) {
           href={`https://www.google.com/maps/search/?api=1&query=${query}`}
           target="_blank"
           rel="noreferrer"
-          className="rounded-lg border border-navy px-3 py-2 text-xs font-bold text-navy hover:bg-bg"
+          className="rounded-lg border border-navy px-3 py-2 text-sm font-bold text-navy hover:bg-bg"
         >
           Cómo llegar
         </a>
@@ -1811,13 +1811,13 @@ function DealersScreen({
   return (
     <main className="mx-auto max-w-6xl px-5 py-10">
       <BackButton label="Volver" onClick={onBack} />
-      <p className="text-xs font-bold uppercase tracking-widest text-red">
+      <p className="text-sm font-bold uppercase tracking-widest text-red">
         Red oficial
       </p>
       <h1 className="mt-2 font-display text-3xl font-bold text-navy">
         Concesionarios oficiales {vehicle.brand}
       </h1>
-      <p className="mt-2 text-sm text-muted">
+      <p className="mt-2 text-base text-muted">
         Elegí dónde querés realizar la reparación gratuita.
       </p>
 
@@ -1828,7 +1828,7 @@ function DealersScreen({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Barrio o localidad"
-            className="w-full rounded-lg border border-border bg-white px-4 py-3 text-sm outline-none focus:border-navy focus:ring-2 focus:ring-navy/10"
+            className="w-full rounded-lg border border-border bg-white px-4 py-3 text-base outline-none focus:border-navy focus:ring-2 focus:ring-navy/10"
           />
         </label>
         <button
@@ -1836,7 +1836,7 @@ function DealersScreen({
             setQuery("")
             setSelectedId(allDealers[0]?.id ?? "")
           }}
-          className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-navy bg-white px-5 py-3 text-sm font-bold text-navy hover:bg-bg"
+          className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-navy bg-white px-5 py-3 text-base font-bold text-navy hover:bg-bg"
         >
           <Icon name="location" className="size-4" />
           Usar mi ubicación
@@ -1868,7 +1868,7 @@ function DealersScreen({
               >
                 <div className="flex items-start gap-3">
                   <span
-                    className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${
+                    className={`flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${
                       selectedDealer.id === dealer.id ? "bg-red" : "bg-navy"
                     }`}
                   >
@@ -1878,19 +1878,19 @@ function DealersScreen({
                     <h2 className="font-display text-lg font-bold text-navy">
                       {dealer.name}
                     </h2>
-                    <p className="mt-1 text-sm text-muted">
+                    <p className="mt-1 text-base text-muted">
                       {dealer.address} · {dealer.neighborhood}
                     </p>
-                    <p className="mt-2 text-xs text-muted">
+                    <p className="mt-2 text-sm text-muted">
                       {dealer.days} · {dealer.hours}
                     </p>
-                    <p className="mt-2 font-mono text-xs font-bold text-navy">
+                    <p className="mt-2 font-mono text-sm font-bold text-navy">
                       {dealer.distanceKm.toLocaleString("es-AR")} km
                     </p>
                     <button
                       onClick={() => setSelectedId(dealer.id)}
                       aria-pressed={selectedDealer.id === dealer.id}
-                      className="mt-3 flex cursor-pointer items-center gap-1.5 text-xs font-bold text-navy underline-offset-2 hover:underline"
+                      className="mt-3 flex cursor-pointer items-center gap-1.5 text-sm font-bold text-navy underline-offset-2 hover:underline"
                     >
                       <Icon name="location" className="size-3.5" />
                       {selectedDealer.id === dealer.id ? "Viendo en el mapa" : "Ver en el mapa"}
@@ -1898,7 +1898,7 @@ function DealersScreen({
                   </div>
                   <button
                     onClick={() => onChoose(dealer)}
-                    className="cursor-pointer rounded-lg bg-red px-4 py-2.5 text-xs font-bold text-white hover:bg-red/90"
+                    className="cursor-pointer rounded-lg bg-red px-4 py-2.5 text-sm font-bold text-white hover:bg-red/90"
                   >
                     Elegir
                   </button>
@@ -1961,7 +1961,7 @@ function BookingScreen({
   return (
     <main className="mx-auto max-w-4xl px-5 py-10">
       <BackButton label="Cambiar concesionario" onClick={onBack} />
-      <p className="text-xs font-bold uppercase tracking-widest text-red">
+      <p className="text-sm font-bold uppercase tracking-widest text-red">
         Reserva de turno
       </p>
       <h1 className="mt-2 font-display text-3xl font-bold text-navy">
@@ -1970,20 +1970,20 @@ function BookingScreen({
 
       <div className="mt-7 grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-2">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-muted">
+          <p className="text-sm font-bold uppercase tracking-wide text-muted">
             Vehículo
           </p>
           <p className="mt-2 font-display font-bold text-navy">
             {vehicle.brand} {vehicle.model} · {vehicle.plate}
           </p>
-          <p className="mt-1 text-xs text-muted">{recall.title}</p>
+          <p className="mt-1 text-sm text-muted">{recall.title}</p>
         </div>
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-muted">
+          <p className="text-sm font-bold uppercase tracking-wide text-muted">
             Concesionario
           </p>
           <p className="mt-2 font-display font-bold text-navy">{dealer.name}</p>
-          <p className="mt-1 text-xs text-muted">{dealer.address}</p>
+          <p className="mt-1 text-sm text-muted">{dealer.address}</p>
         </div>
       </div>
 
@@ -2009,7 +2009,7 @@ function BookingScreen({
                     : "border-border bg-white text-navy hover:border-navy"
                 }`}
               >
-                <span className="block text-xs font-bold uppercase">
+                <span className="block text-sm font-bold uppercase">
                   {new Intl.DateTimeFormat("es-AR", { weekday: "short" }).format(parsed)}
                 </span>
                 <span className="mt-1 block font-display text-lg font-bold">
@@ -2032,7 +2032,7 @@ function BookingScreen({
                   setTime(slot.time)
                   setError("")
                 }}
-                className={`cursor-pointer rounded-lg border px-3 py-3 font-mono text-sm font-bold disabled:cursor-not-allowed disabled:bg-bg disabled:text-muted disabled:line-through ${
+                className={`cursor-pointer rounded-lg border px-3 py-3 font-mono text-base font-bold disabled:cursor-not-allowed disabled:bg-bg disabled:text-muted disabled:line-through ${
                   time === slot.time
                     ? "border-red bg-red text-white"
                     : "border-border bg-white text-navy hover:border-navy"
@@ -2043,7 +2043,7 @@ function BookingScreen({
             ))}
           </div>
         ) : (
-          <p className="mt-3 text-sm text-muted">Elegí un día para ver los horarios.</p>
+          <p className="mt-3 text-base text-muted">Elegí un día para ver los horarios.</p>
         )}
 
         <fieldset className="mt-7">
@@ -2067,7 +2067,7 @@ function BookingScreen({
                   )
                   setError("")
                 }}
-                className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border py-3 text-sm font-bold ${
+                className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border py-3 text-base font-bold ${
                   channel === item
                     ? item === "WhatsApp"
                       ? "border-green bg-green text-white"
@@ -2083,7 +2083,7 @@ function BookingScreen({
         </fieldset>
 
         <label className="mt-5 block">
-          <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-navy">
+          <span className="mb-2 block text-sm font-bold uppercase tracking-wide text-navy">
             {channel === "WhatsApp"
               ? "Número de WhatsApp"
               : "Correo electrónico"}
@@ -2101,15 +2101,15 @@ function BookingScreen({
                 ? "+54 9 11 1234-5678"
                 : "nombre@ejemplo.com"
             }
-            className="w-full rounded-lg border border-border bg-white px-4 py-3 text-sm outline-none focus:border-navy focus:ring-2 focus:ring-navy/10"
+            className="w-full rounded-lg border border-border bg-white px-4 py-3 text-base outline-none focus:border-navy focus:ring-2 focus:ring-navy/10"
           />
-          <span className="mt-2 block text-xs text-muted">
+          <span className="mt-2 block text-sm text-muted">
             Usaremos este dato únicamente para el recordatorio simulado.
           </span>
         </label>
 
         {error && (
-          <p role="alert" className="mt-4 flex items-center gap-2 text-sm font-bold text-red">
+          <p role="alert" className="mt-4 flex items-center gap-2 text-base font-bold text-red">
             <Icon name="alert" className="size-4" />
             {error}
           </p>
@@ -2135,7 +2135,7 @@ function BookingScreen({
             }
             onConfirm(date, time, channel, destination.trim())
           }}
-          className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red py-3.5 text-sm font-bold text-white hover:bg-red/90"
+          className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red py-3.5 text-base font-bold text-white hover:bg-red/90"
         >
           <Icon name="calendar" className="size-4" />
           Confirmar turno
@@ -2189,9 +2189,9 @@ function BookingOkScreen({
         <h1 className="mt-5 font-display text-3xl font-bold text-navy">
           Turno reservado
         </h1>
-        <p className="mt-2 font-mono text-sm font-bold text-red">{appointment.code}</p>
+        <p className="mt-2 font-mono text-base font-bold text-red">{appointment.code}</p>
 
-        <dl className="mt-7 divide-y divide-border rounded-xl border border-border text-left text-sm">
+        <dl className="mt-7 divide-y divide-border rounded-xl border border-border text-left text-base">
           {[
             ["Concesionario", `${dealer?.name} · ${dealer?.address}`],
             ["Día y hora", `${formatAppointmentDate(appointment.date)} · ${appointment.time} h`],
@@ -2199,12 +2199,12 @@ function BookingOkScreen({
             ["Campaña", recall.title],
           ].map(([label, value]) => (
             <div key={label} className="grid gap-1 px-4 py-3 sm:grid-cols-[130px_1fr]">
-              <dt className="text-xs font-bold text-muted">{label}</dt>
+              <dt className="text-sm font-bold text-muted">{label}</dt>
               <dd className="font-semibold text-navy">{value}</dd>
             </div>
           ))}
           <div className="grid gap-1 px-4 py-3 sm:grid-cols-[130px_1fr]">
-            <dt className="text-xs font-bold text-muted">Costo</dt>
+            <dt className="text-sm font-bold text-muted">Costo</dt>
             <dd className="font-bold text-green">Gratuito</dd>
           </div>
         </dl>
@@ -2216,8 +2216,8 @@ function BookingOkScreen({
           className="mt-5 flex w-full cursor-pointer items-center justify-between rounded-xl bg-bg px-4 py-3 text-left"
         >
           <span>
-            <strong className="block text-sm text-navy">Recordatorio 24 h antes</strong>
-            <span className="text-xs text-muted">
+            <strong className="block text-base text-navy">Recordatorio 24 h antes</strong>
+            <span className="text-sm text-muted">
               Por {appointment.reminderChannel}
               {appointment.reminderDestination
                 ? ` · ${appointment.reminderDestination}`
@@ -2236,14 +2236,14 @@ function BookingOkScreen({
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <button
             onClick={downloadCalendar}
-            className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-navy py-3 text-sm font-bold text-navy hover:bg-bg"
+            className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-navy py-3 text-base font-bold text-navy hover:bg-bg"
           >
             <Icon name="calendar" className="size-4" />
             Agregar al calendario
           </button>
           <button
             onClick={onAppointments}
-            className="cursor-pointer rounded-lg bg-navy py-3 text-sm font-bold text-white hover:bg-navy-mid"
+            className="cursor-pointer rounded-lg bg-navy py-3 text-base font-bold text-white hover:bg-navy-mid"
           >
             Ver Mis turnos
           </button>
@@ -2280,10 +2280,10 @@ function ReminderModal({
       <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl">
         <div className={`flex items-center justify-between px-5 py-4 text-white ${email ? "bg-navy" : "bg-green"}`}>
           <div>
-            <p className="text-sm font-bold">
+            <p className="text-base font-bold">
               {email ? "AvisAR · Recordatorio de turno" : "AvisAR · Cuenta de empresa"}
             </p>
-            <p className="text-xs text-white/70">{email ? "Para: vos" : "en línea"}</p>
+            <p className="text-sm text-white/70">{email ? "Para: vos" : "en línea"}</p>
           </div>
           <button
             onClick={onClose}
@@ -2295,29 +2295,29 @@ function ReminderModal({
         </div>
         <div className={email ? "bg-bg p-5" : "bg-green-light p-5"}>
           {email && (
-            <p className="mb-3 text-sm font-bold text-navy">
+            <p className="mb-3 text-base font-bold text-navy">
               Asunto: Tu turno de reparación es mañana
             </p>
           )}
-          <div className="rounded-xl bg-white p-4 text-sm leading-relaxed text-navy shadow-sm">
+          <div className="rounded-xl bg-white p-4 text-base leading-relaxed text-navy shadow-sm">
             {message}
           </div>
           <div className="mt-4 grid gap-2 sm:grid-cols-3">
             <button
               onClick={onClose}
-              className="cursor-pointer rounded-lg bg-green px-3 py-2.5 text-xs font-bold text-white"
+              className="cursor-pointer rounded-lg bg-green px-3 py-2.5 text-sm font-bold text-white"
             >
               Confirmo
             </button>
             <button
               onClick={onReprogram}
-              className="cursor-pointer rounded-lg bg-white px-3 py-2.5 text-xs font-bold text-navy"
+              className="cursor-pointer rounded-lg bg-white px-3 py-2.5 text-sm font-bold text-navy"
             >
               Reprogramar
             </button>
             <button
               onClick={onCancel}
-              className="cursor-pointer rounded-lg border border-red/25 bg-white px-3 py-2.5 text-xs font-bold text-red"
+              className="cursor-pointer rounded-lg border border-red/25 bg-white px-3 py-2.5 text-sm font-bold text-red"
             >
               Cancelar
             </button>
@@ -2362,18 +2362,18 @@ function MyAppointmentsScreen({
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-10">
-      <p className="text-xs font-bold uppercase tracking-widest text-red">
+      <p className="text-sm font-bold uppercase tracking-widest text-red">
         Agenda de reparaciones
       </p>
       <h1 className="mt-2 font-display text-3xl font-bold text-navy">Mis turnos</h1>
-      <p className="mt-2 text-sm text-muted">
+      <p className="mt-2 text-base text-muted">
         Administrá tus reservas y confirmá el resultado de cada reparación.
       </p>
 
       <div className="mt-7 inline-flex rounded-lg bg-white p-1">
         <button
           onClick={() => setTab("upcoming")}
-          className={`cursor-pointer rounded-md px-4 py-2 text-sm font-bold ${
+          className={`cursor-pointer rounded-md px-4 py-2 text-base font-bold ${
             tab === "upcoming" ? "bg-navy text-white" : "text-muted"
           }`}
         >
@@ -2381,7 +2381,7 @@ function MyAppointmentsScreen({
         </button>
         <button
           onClick={() => setTab("past")}
-          className={`cursor-pointer rounded-md px-4 py-2 text-sm font-bold ${
+          className={`cursor-pointer rounded-md px-4 py-2 text-base font-bold ${
             tab === "past" ? "bg-navy text-white" : "text-muted"
           }`}
         >
@@ -2413,44 +2413,44 @@ function MyAppointmentsScreen({
                 <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-mono text-sm font-bold text-navy">
+                      <p className="font-mono text-base font-bold text-navy">
                         {appointment.plate}
                       </p>
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusStyle[appointment.status]}`}>
+                      <span className={`rounded-full px-2.5 py-1 text-sm font-bold ${statusStyle[appointment.status]}`}>
                         {appointment.status}
                       </span>
                     </div>
                     <h2 className="mt-3 font-display text-lg font-bold text-navy">
                       {appointment.vehicle}
                     </h2>
-                    <p className="mt-1 text-sm font-semibold text-navy">
+                    <p className="mt-1 text-base font-semibold text-navy">
                       {formatAppointmentDate(appointment.date)} · {appointment.time} h
                     </p>
-                    <p className="mt-1 text-sm text-muted">
+                    <p className="mt-1 text-base text-muted">
                       {dealer?.name} · {dealer?.address}
                     </p>
                   </div>
-                  <span className="font-mono text-xs font-bold text-red">
+                  <span className="font-mono text-sm font-bold text-red">
                     {appointment.code}
                   </span>
                 </div>
 
                 {pastDue && (
                   <div className="mt-5 rounded-xl bg-bg p-4">
-                    <p className="text-sm font-bold text-navy">
+                    <p className="text-base font-bold text-navy">
                       ¿Se realizó la reparación en tu turno del{" "}
                       {formatAppointmentDate(appointment.date)}?
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       <button
                         onClick={() => onComplete(appointment)}
-                        className="cursor-pointer rounded-lg bg-green px-4 py-2.5 text-xs font-bold text-white"
+                        className="cursor-pointer rounded-lg bg-green px-4 py-2.5 text-sm font-bold text-white"
                       >
                         Sí, ya lo reparé
                       </button>
                       <button
                         onClick={() => onReprogram(appointment)}
-                        className="cursor-pointer rounded-lg border border-border bg-white px-4 py-2.5 text-xs font-bold text-navy"
+                        className="cursor-pointer rounded-lg border border-border bg-white px-4 py-2.5 text-sm font-bold text-navy"
                       >
                         No, reprogramar
                       </button>
@@ -2459,7 +2459,7 @@ function MyAppointmentsScreen({
                 )}
 
                 {appointment.status === "Realizado" && (
-                  <p className="mt-5 flex items-center gap-2 rounded-lg bg-green-light px-4 py-3 text-sm font-bold text-green">
+                  <p className="mt-5 flex items-center gap-2 rounded-lg bg-green-light px-4 py-3 text-base font-bold text-green">
                     <Icon name="check" className="size-4" />
                     Reparación realizada · alerta cerrada para esta campaña
                   </p>
@@ -2469,7 +2469,7 @@ function MyAppointmentsScreen({
                   <div className="mt-5 flex flex-wrap gap-2">
                     <button
                       onClick={() => onReprogram(appointment)}
-                      className="cursor-pointer rounded-lg border border-navy px-4 py-2.5 text-xs font-bold text-navy"
+                      className="cursor-pointer rounded-lg border border-navy px-4 py-2.5 text-sm font-bold text-navy"
                     >
                       Reprogramar
                     </button>
@@ -2477,14 +2477,14 @@ function MyAppointmentsScreen({
                       onClick={() => {
                         if (window.confirm("¿Querés cancelar este turno?")) onCancel(appointment)
                       }}
-                      className="cursor-pointer rounded-lg border border-red/25 px-4 py-2.5 text-xs font-bold text-red"
+                      className="cursor-pointer rounded-lg border border-red/25 px-4 py-2.5 text-sm font-bold text-red"
                     >
                       Cancelar
                     </button>
                     {appointment.reminderActive && (
                       <button
                         onClick={() => setReminder(appointment)}
-                        className="flex cursor-pointer items-center gap-2 rounded-lg bg-navy px-4 py-2.5 text-xs font-bold text-white"
+                        className="flex cursor-pointer items-center gap-2 rounded-lg bg-navy px-4 py-2.5 text-sm font-bold text-white"
                       >
                         <Icon name="message" className="size-4" />
                         Ver recordatorio
@@ -2492,7 +2492,7 @@ function MyAppointmentsScreen({
                     )}
                     <button
                       onClick={() => onSimulate(appointment)}
-                      className="cursor-pointer rounded-lg bg-bg px-4 py-2.5 text-xs font-bold text-muted"
+                      className="cursor-pointer rounded-lg bg-bg px-4 py-2.5 text-sm font-bold text-muted"
                     >
                       Simular día del turno
                     </button>
@@ -2545,7 +2545,7 @@ function EducationScreen({ onSearch }: { onSearch: () => void }) {
   return (
     <main className="mx-auto max-w-5xl px-5 py-10">
       <div className="max-w-3xl">
-        <p className="text-xs font-bold uppercase tracking-widest text-red">
+        <p className="text-sm font-bold uppercase tracking-widest text-red">
           Guía simple
         </p>
         <h1 className="mt-2 font-display text-4xl font-bold tracking-tight text-navy">
@@ -2577,11 +2577,11 @@ function EducationScreen({ onSearch }: { onSearch: () => void }) {
               key={number}
               className="rounded-xl border border-border bg-white p-5"
             >
-              <span className="font-mono text-sm font-bold text-red">
+              <span className="font-mono text-base font-bold text-red">
                 {number}
               </span>
               <h3 className="mt-7 font-display font-bold text-navy">{title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted">{text}</p>
+              <p className="mt-2 text-base leading-relaxed text-muted">{text}</p>
             </div>
           ))}
         </div>
@@ -2593,7 +2593,7 @@ function EducationScreen({ onSearch }: { onSearch: () => void }) {
           <h2 className="mt-5 font-display text-2xl font-bold">
             Si el recall es crítico
           </h2>
-          <ol className="mt-5 space-y-3 text-sm text-white/80">
+          <ol className="mt-5 space-y-3 text-base text-white/80">
             <li className="flex gap-3">
               <strong className="text-white">1.</strong> Evitá usar el vehículo.
             </li>
@@ -2612,20 +2612,20 @@ function EducationScreen({ onSearch }: { onSearch: () => void }) {
           </ol>
         </div>
         <div className="rounded-2xl border border-border bg-white p-7">
-          <p className="text-xs font-bold uppercase tracking-widest text-red">
+          <p className="text-sm font-bold uppercase tracking-widest text-red">
             Identificación
           </p>
           <h2 className="mt-2 font-display text-2xl font-bold text-navy">
             Cómo encontrar el VIN
           </h2>
-          <p className="mt-3 text-sm leading-relaxed text-muted">
+          <p className="mt-3 text-base leading-relaxed text-muted">
             Es un código único de 17 caracteres. No incluye las letras I, O ni Q
             para evitar confusiones.
           </p>
-          <div className="mt-5 rounded-lg border-2 border-navy bg-bg px-4 py-3 text-center font-mono text-sm font-bold tracking-widest text-navy">
+          <div className="mt-5 rounded-lg border-2 border-navy bg-bg px-4 py-3 text-center font-mono text-base font-bold tracking-widest text-navy">
             8AGF19U0BCR123456
           </div>
-          <ul className="mt-5 space-y-2 text-sm text-muted">
+          <ul className="mt-5 space-y-2 text-base text-muted">
             <li>• En la cédula verde o azul.</li>
             <li>• En la base del parabrisas.</li>
             <li>• En el marco de la puerta del conductor.</li>
@@ -2645,7 +2645,7 @@ function EducationScreen({ onSearch }: { onSearch: () => void }) {
             >
               <button
                 onClick={() => setOpen(open === index ? -1 : index)}
-                className="flex w-full cursor-pointer items-center justify-between gap-4 p-5 text-left font-display text-sm font-bold text-navy"
+                className="flex w-full cursor-pointer items-center justify-between gap-4 p-5 text-left font-display text-base font-bold text-navy"
                 aria-expanded={open === index}
               >
                 {question}
@@ -2657,7 +2657,7 @@ function EducationScreen({ onSearch }: { onSearch: () => void }) {
                 />
               </button>
               {open === index && (
-                <p className="border-t border-border px-5 py-4 text-sm leading-relaxed text-muted">
+                <p className="border-t border-border px-5 py-4 text-base leading-relaxed text-muted">
                   {answer}
                 </p>
               )}
@@ -2670,13 +2670,13 @@ function EducationScreen({ onSearch }: { onSearch: () => void }) {
         <h2 className="font-display text-2xl font-bold">
           La consulta lleva menos de un minuto
         </h2>
-        <p className="mt-2 text-sm text-white/80">
+        <p className="mt-2 text-base text-white/80">
           Es gratuita, no requiere registro y puede ayudarte a prevenir un
           riesgo.
         </p>
         <button
           onClick={onSearch}
-          className="mt-6 cursor-pointer rounded-lg bg-white px-7 py-3 text-sm font-bold text-red hover:bg-red-light"
+          className="mt-6 cursor-pointer rounded-lg bg-white px-7 py-3 text-base font-bold text-red hover:bg-red-light"
         >
           Buscar mi vehículo
         </button>
@@ -2704,12 +2704,12 @@ function EmptyState({
         <Icon name={icon} className="size-6" />
       </span>
       <h2 className="mt-5 font-display text-xl font-bold text-navy">{title}</h2>
-      <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted">
+      <p className="mx-auto mt-2 max-w-md text-base leading-relaxed text-muted">
         {text}
       </p>
       <button
         onClick={onAction}
-        className="mt-6 cursor-pointer rounded-lg bg-navy px-6 py-3 text-sm font-bold text-white hover:bg-navy-mid"
+        className="mt-6 cursor-pointer rounded-lg bg-navy px-6 py-3 text-base font-bold text-white hover:bg-navy-mid"
       >
         {action}
       </button>
@@ -2748,13 +2748,13 @@ function LoginScreen({
         <span className="flex size-12 items-center justify-center rounded-xl bg-navy text-white">
           <Icon name="shield" className="size-6" />
         </span>
-        <p className="mt-6 text-xs font-bold uppercase tracking-widest text-red">
+        <p className="mt-6 text-sm font-bold uppercase tracking-widest text-red">
           Acceso seguro
         </p>
         <h1 className="mt-2 font-display text-4xl font-bold tracking-tight text-navy">
           Tus vehículos, en un solo lugar
         </h1>
-        <p className="mt-4 max-w-md text-sm leading-relaxed text-muted">
+        <p className="mt-4 max-w-md text-base leading-relaxed text-muted">
           Ingresá para consultar el estado de tus vehículos, revisar tu
           historial y administrar tus alertas personales.
         </p>
@@ -2766,7 +2766,7 @@ function LoginScreen({
           ].map(([icon, text]) => (
             <div
               key={text}
-              className="flex items-center gap-3 text-sm font-semibold text-navy"
+              className="flex items-center gap-3 text-base font-semibold text-navy"
             >
               <span className="flex size-9 items-center justify-center rounded-lg bg-white text-green">
                 <Icon
@@ -2785,7 +2785,7 @@ function LoginScreen({
             <h2 className="font-display text-2xl font-bold text-navy">
               Iniciar sesión
             </h2>
-            <p className="mt-1 text-sm text-muted">
+            <p className="mt-1 text-base text-muted">
               Usá la cuenta demo para acceder.
             </p>
           </div>
@@ -2799,7 +2799,7 @@ function LoginScreen({
         </div>
         <form onSubmit={submit} className="mt-7">
           <label className="block">
-            <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-navy">
+            <span className="mb-2 block text-sm font-bold uppercase tracking-wide text-navy">
               E-mail
             </span>
             <input
@@ -2810,11 +2810,11 @@ function LoginScreen({
                 setError("")
               }}
               autoComplete="username"
-              className="w-full rounded-lg border border-border px-4 py-3 text-sm outline-none focus:border-navy focus:ring-2 focus:ring-navy/10"
+              className="w-full rounded-lg border border-border px-4 py-3 text-base outline-none focus:border-navy focus:ring-2 focus:ring-navy/10"
             />
           </label>
           <label className="mt-5 block">
-            <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-navy">
+            <span className="mb-2 block text-sm font-bold uppercase tracking-wide text-navy">
               Contraseña
             </span>
             <input
@@ -2826,13 +2826,13 @@ function LoginScreen({
               }}
               autoComplete="current-password"
               placeholder="Ingresá tu contraseña"
-              className="w-full rounded-lg border border-border px-4 py-3 text-sm outline-none focus:border-navy focus:ring-2 focus:ring-navy/10"
+              className="w-full rounded-lg border border-border px-4 py-3 text-base outline-none focus:border-navy focus:ring-2 focus:ring-navy/10"
             />
           </label>
           {error && (
             <p
               role="alert"
-              className="mt-3 flex items-center gap-2 text-xs font-bold text-red"
+              className="mt-3 flex items-center gap-2 text-sm font-bold text-red"
             >
               <Icon name="alert" className="size-4" />
               {error}
@@ -2840,13 +2840,13 @@ function LoginScreen({
           )}
           <button
             type="submit"
-            className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red py-3.5 text-sm font-bold text-white hover:bg-red/90"
+            className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red py-3.5 text-base font-bold text-white hover:bg-red/90"
           >
             <Icon name="user" className="size-4" />
             Ingresar
           </button>
         </form>
-        <div className="mt-5 rounded-lg bg-bg p-4 text-xs leading-relaxed text-muted">
+        <div className="mt-5 rounded-lg bg-bg p-4 text-sm leading-relaxed text-muted">
           <strong className="text-navy">Credenciales demo</strong>
           <br />
           usuario@avisar.com · segura123
@@ -2854,7 +2854,7 @@ function LoginScreen({
           Otras cuentas demo: gustavo@, carolina@, lucia@, jorge@, sofia@,
           nicolas@, valeria@ y martina@demo.avisar.com · demo1234
         </div>
-        <p className="mt-4 text-center text-xs text-muted">
+        <p className="mt-4 text-center text-sm text-muted">
           Simulación local: no se envían credenciales a ningún servidor.
         </p>
       </section>
@@ -2872,7 +2872,7 @@ function BackButton({
   return (
     <button
       onClick={onClick}
-      className="mb-7 flex cursor-pointer items-center gap-2 text-sm font-semibold text-muted hover:text-navy"
+      className="mb-7 flex cursor-pointer items-center gap-2 text-base font-semibold text-muted hover:text-navy"
     >
       <Icon name="arrow" className="size-4 rotate-180" />
       {label}
@@ -2888,11 +2888,11 @@ function Footer({ onNav }: { onNav: (screen: Screen) => void }) {
           <p className="font-display font-bold text-navy">
             Avis<span className="text-red">AR</span>
           </p>
-          <p className="mt-1 text-xs text-muted">
+          <p className="mt-1 text-sm text-muted">
             Prototipo educativo de seguridad vehicular.
           </p>
         </div>
-        <div className="flex flex-wrap gap-5 text-xs font-semibold text-muted">
+        <div className="flex flex-wrap gap-5 text-sm font-semibold text-muted">
           <button
             onClick={() => onNav("home")}
             className="cursor-pointer hover:text-navy"
