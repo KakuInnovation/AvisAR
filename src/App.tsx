@@ -28,7 +28,7 @@ import {
   type AppointmentStatus,
 } from "./data/avisar-db"
 
-type Screen = "home" | "login" | "scanner" | "results" | "detail" | "subscribe" | "queries" | "my-alerts" | "dealers" | "booking" | "booking-ok" | "my-appointments" | "education"
+type Screen = "home" | "login" | "scanner" | "results" | "detail" | "subscribe" | "queries" | "my-alerts" | "dealers" | "booking" | "booking-ok" | "my-appointments" | "education" | "pro"
 type Risk = "CRÍTICO" | "ALTO" | "MEDIO"
 type RepairStatus = "Pendiente de revisión" | "Reparación programada" | "Reparación realizada"
 type Channel = "WhatsApp" | "E-mail"
@@ -40,9 +40,91 @@ interface User {
 }
 
 const riskStyles: Record<Risk, string> = {
-  CRÍTICO: "bg-red-light text-red border-red/20",
-  ALTO: "bg-amber-light text-amber border-amber/25",
-  MEDIO: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  CRÍTICO: "bg-risk-high text-white border-risk-high",
+  ALTO: "bg-risk-mid text-ink border-ink",
+  MEDIO: "bg-risk-mid-light text-risk-mid-text border-risk-mid-text",
+}
+
+const riskLabel: Record<Risk, string> = {
+  CRÍTICO: "Riesgo crítico",
+  ALTO: "Riesgo alto",
+  MEDIO: "Riesgo medio",
+}
+
+type BodyType = "sedan" | "suv" | "pickup" | "hatch"
+
+const BODY_LABEL: Record<BodyType, string> = {
+  sedan: "Sedán",
+  suv: "SUV",
+  pickup: "Pick-up",
+  hatch: "Hatchback",
+}
+
+const PICKUPS = ["Ranger", "Hilux", "Amarok", "Frontier", "S10", "Toro", "Strada", "Saveiro", "Oroch", "Maverick", "Alaskan"]
+const SUVS = ["EcoSport", "Duster", "Tracker", "Renegade", "Compass", "HR-V", "Kicks", "Tucson", "Journey", "Sportage", "X1", "X3", "X55", "X55E", "X70", "Outlander", "H6", "Territory", "Tera", "Kardian", "2008", "3008", "Tiggo 4", "Tiggo 7", "BJ30E", "Bronco", "Atto", "Basalt", "WR-V", "ZS", "Jolion", "T1", "CS55", "GLC", "Taos", "T-Cross", "Nivus", "Pulse", "Fastback", "Creta", "C4 Cactus"]
+const SEDANS = ["Corolla", "Civic", "Cronos", "Versa", "Classic", "Cruze", "Vento", "Logan", "Bora", "Siena", "Sentra", "HB20S", "C250", "Voyage", "Virtus", "K3", "Prisma", "Focus Sedán"]
+
+function bodyTypeOf(model: string): BodyType {
+  if (PICKUPS.includes(model)) return "pickup"
+  if (SUVS.includes(model)) return "suv"
+  if (SEDANS.includes(model)) return "sedan"
+  return "hatch"
+}
+
+function CarSilhouette({
+  type,
+  className = "h-16 w-40",
+  label,
+}: {
+  type: BodyType
+  className?: string
+  label?: string
+}) {
+  const body: Record<BodyType, { d: string; wheels: [number, number]; r: number; w: number }> = {
+    sedan: { d: "M10 60V47q2-7 14-9l32-4 22-16q6-4 18-4h32q10 0 18 8l14 12 22 4q10 2 10 10v12z", wheels: [50, 152], r: 13, w: 200 },
+    suv: { d: "M10 60V41q0-7 8-8l22-2 16-19q2-2 8-2h86q8 0 12 6l14 14 10 2q6 2 6 10v18z", wheels: [50, 154], r: 14, w: 200 },
+    pickup: { d: "M8 60V41q0-7 8-8l28-2 14-17q2-2 8-2h38q6 0 8 6l2 16h78v26z", wheels: [48, 160], r: 14, w: 200 },
+    hatch: { d: "M14 60V45q2-6 12-8l26-5 20-17q4-3 12-3h52q10 0 14 9l8 15q6 3 6 11v13z", wheels: [46, 134], r: 13, w: 180 },
+  }
+  const shape = body[type]
+  return (
+    <svg
+      className={className}
+      viewBox={`0 0 ${shape.w} 80`}
+      {...(label ? { role: "img", "aria-label": label } : { "aria-hidden": true })}
+    >
+      <path fill="currentColor" d={shape.d} />
+      {shape.wheels.map((cx) => (
+        <circle key={cx} cx={cx} cy="61" r={shape.r} fill="currentColor" stroke="#FFFFFF" strokeWidth="4" />
+      ))}
+    </svg>
+  )
+}
+
+function PlateFrame({ children, small = false }: { children: React.ReactNode; small?: boolean }) {
+  return (
+    <div className={`overflow-hidden rounded-lg border-[3px] border-ink bg-white ${small ? "inline-block" : "block"}`}>
+      <div
+        className={`bg-plate text-center font-bold tracking-[0.22em] text-white ${small ? "px-3 py-0.5 text-[11px]" : "py-1 text-[13px]"}`}
+        aria-hidden="true"
+      >
+        REPÚBLICA ARGENTINA
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function Diamond({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="flex size-12 rotate-45 items-center justify-center border-[3px] border-ink bg-signal" aria-hidden="true">
+      <span className="-rotate-45 font-display text-2xl font-extrabold">{children}</span>
+    </span>
+  )
+}
+
+function Hazard() {
+  return <div className="hazard" aria-hidden="true" />
 }
 
 function useStoredState<T>(key: string, initial: T) {
@@ -66,7 +148,7 @@ function Icon({
   name,
   className = "size-5",
 }: {
-  name: "search" | "camera" | "shield" | "alert" | "check" | "arrow" | "trash" | "bell" | "car" | "info" | "clock" | "mail" | "phone" | "user" | "logout" | "lock" | "close" | "calendar" | "location" | "message"
+  name: "search" | "camera" | "shield" | "alert" | "check" | "arrow" | "trash" | "bell" | "car" | "info" | "clock" | "mail" | "phone" | "user" | "logout" | "lock" | "close" | "calendar" | "location" | "message" | "wrench" | "share" | "download" | "copy" | "menu" | "building" | "upload"
   className?: string
 }) {
   const paths: Record<string, React.ReactNode> = {
@@ -166,6 +248,20 @@ function Icon({
         <path d="M8 9h8M8 13h5" />
       </>
     ),
+    wrench: (
+      <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3.5 17.5l3 3 5.8-5.8a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5 2.5-2.5Z" />
+    ),
+    share: <path d="M4 20l1.4-4A8 8 0 1 1 8 18.6L4 20Z" />,
+    download: <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />,
+    upload: <path d="M12 16V5M7 10l5-5 5 5M5 20h14" />,
+    copy: (
+      <>
+        <rect x="8" y="8" width="12" height="12" rx="2" />
+        <path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" />
+      </>
+    ),
+    menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+    building: <path d="M4 21V5l8-2v18M12 9h8v12M7 8h2M7 12h2M7 16h2M15 13h2M15 17h2M2 21h20" />,
   }
   return (
     <svg
@@ -173,7 +269,7 @@ function Icon({
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="2.2"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -186,10 +282,10 @@ function Icon({
 function Badge({ risk }: { risk: Risk }) {
   return (
     <span
-      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-bold tracking-wide ${riskStyles[risk]}`}
+      className={`inline-flex items-center gap-2 rounded border-2 px-3 py-1 text-sm font-bold uppercase tracking-wide ${riskStyles[risk]}`}
     >
-      <span className="size-1.5 rounded-full bg-current" />
-      {risk}
+      <Icon name={risk === "CRÍTICO" ? "alert" : "wrench"} className="size-4" />
+      {riskLabel[risk]}
     </span>
   )
 }
@@ -256,6 +352,14 @@ function RepairProgress({ status }: { status: RepairStatus }) {
   )
 }
 
+function Logo({ small = false }: { small?: boolean }) {
+  return (
+    <span className={`font-display font-extrabold tracking-normal ${small ? "text-2xl" : "text-[32px]"}`}>
+      AVIS<span className="ml-0.5 bg-signal px-1.5 text-ink">AR</span>
+    </span>
+  )
+}
+
 function NavBar({
   screen,
   onNav,
@@ -269,57 +373,90 @@ function NavBar({
   onLogin: () => void
   onLogout: () => void
 }) {
-  const items: [string, Screen][] = [
-    ["Consultar", "home"],
-    ["Mis consultas", "queries"],
-    ["Mis alertas", "my-alerts"],
-    ["Mis turnos", "my-appointments"],
-    ["¿Qué es un recall?", "education"],
-  ]
+  const [open, setOpen] = useState(false)
+  const isPro = screen === "pro"
+  const items: [string, Screen][] = isPro
+    ? [
+        ["Consulta masiva", "pro"],
+        ["Turnos", "my-appointments"],
+        ["¿Qué es un recall?", "education"],
+      ]
+    : [
+        ["Consultar", "home"],
+        ["Mis consultas", "queries"],
+        ["Mis alertas", "my-alerts"],
+        ["Mis turnos", "my-appointments"],
+        ["¿Qué es un recall?", "education"],
+      ]
+  const go = (target: Screen) => {
+    setOpen(false)
+    onNav(target)
+  }
+  const switchLink: [string, Screen] = isPro
+    ? ["Soy particular", "home"]
+    : ["Soy concesionario o taller", "pro"]
+  const linkClass = (active: boolean) =>
+    `min-h-11 cursor-pointer rounded px-3 py-2 text-base font-semibold transition ${
+      active ? "bg-signal text-ink" : "text-white hover:bg-white/10"
+    }`
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
+    <header className="on-dark sticky top-0 z-50 bg-ink text-white print:hidden">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-3">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => go(isPro ? "pro" : "home")}
+            className="cursor-pointer rounded"
+            aria-label="AvisAR, ir al inicio"
+          >
+            <Logo />
+          </button>
+          {isPro && (
+            <span className="rounded border-2 border-signal px-2 py-0.5 text-[13px] font-bold tracking-[0.12em] text-signal">
+              PROFESIONAL
+            </span>
+          )}
+        </div>
         <button
-          onClick={() => onNav("home")}
-          className="flex cursor-pointer items-center gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-navy"
-          aria-label="Ir al inicio"
+          onClick={() => setOpen(!open)}
+          aria-expanded={open}
+          aria-controls="menu-principal"
+          className="flex min-h-11 cursor-pointer items-center gap-2 rounded border-2 border-white/60 px-3 font-semibold lg:hidden"
         >
-          <span className="flex size-8 items-center justify-center rounded-lg bg-navy text-white">
-            <Icon name="shield" className="size-4" />
-          </span>
-          <span className="font-display text-lg font-bold tracking-tight text-navy">
-            Avis<span className="text-red">AR</span>
-          </span>
+          <Icon name={open ? "close" : "menu"} className="size-5" />
+          Menú
         </button>
         <nav
-          className="hidden items-center gap-1 md:flex"
+          id="menu-principal"
           aria-label="Principal"
+          className={`${open ? "flex" : "hidden"} w-full flex-col gap-1 pb-2 lg:flex lg:w-auto lg:flex-row lg:items-center lg:pb-0`}
         >
           {items.map(([label, target]) => (
             <button
-              key={target}
-              onClick={() => onNav(target)}
-              className={`cursor-pointer rounded-lg px-3 py-2 text-base font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy ${
-                screen === target
-                  ? "bg-navy text-white"
-                  : "text-muted hover:bg-bg hover:text-navy"
-              }`}
+              key={label}
+              onClick={() => go(target)}
+              aria-current={screen === target ? "page" : undefined}
+              className={`${linkClass(screen === target)} text-left`}
             >
               {label}
             </button>
           ))}
-          <span className="mx-2 h-6 w-px bg-border" />
+          <button
+            onClick={() => go(switchLink[1])}
+            className="min-h-11 cursor-pointer rounded px-3 py-2 text-left text-base font-semibold text-signal underline underline-offset-4 hover:bg-white/10"
+          >
+            {switchLink[0]}
+          </button>
+          <span className="mx-2 hidden h-6 w-px bg-white/30 lg:block" aria-hidden="true" />
           {user ? (
-            <div className="flex items-center gap-2">
-              <span className="flex size-8 items-center justify-center rounded-full bg-navy/10 text-navy">
-                <Icon name="user" className="size-4" />
-              </span>
-              <span className="max-w-28 truncate text-sm font-semibold text-navy">
-                {user.name}
-              </span>
+            <div className="flex items-center gap-2 px-3 lg:px-0">
+              <Icon name="user" className="size-5 text-signal" />
+              <span className="max-w-32 truncate text-sm font-semibold">{user.name}</span>
               <button
-                onClick={onLogout}
-                className="flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-2 text-sm font-semibold text-muted hover:bg-bg hover:text-navy"
+                onClick={() => {
+                  setOpen(false)
+                  onLogout()
+                }}
+                className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded px-2 text-sm font-semibold text-white hover:bg-white/10"
               >
                 <Icon name="logout" className="size-4" />
                 Salir
@@ -327,40 +464,19 @@ function NavBar({
             </div>
           ) : (
             <button
-              onClick={onLogin}
-              className="flex cursor-pointer items-center gap-2 rounded-lg bg-navy px-4 py-2 text-base font-bold text-white hover:bg-navy-mid"
+              onClick={() => {
+                setOpen(false)
+                onLogin()
+              }}
+              className="flex min-h-11 cursor-pointer items-center gap-2 rounded border-2 border-signal px-4 text-base font-bold text-signal hover:bg-signal hover:text-ink"
             >
               <Icon name="user" className="size-4" />
               Ingresar
             </button>
           )}
         </nav>
-        <button
-          onClick={user ? onLogout : onLogin}
-          className="flex cursor-pointer items-center gap-2 rounded-lg bg-navy px-3 py-2 text-sm font-bold text-white md:hidden"
-        >
-          <Icon name={user ? "logout" : "user"} className="size-4" />
-          {user ? "Salir" : "Ingresar"}
-        </button>
       </div>
-      <nav
-        className="flex overflow-x-auto border-t border-border px-3 md:hidden"
-        aria-label="Principal móvil"
-      >
-        {items.map(([label, target]) => (
-          <button
-            key={target}
-            onClick={() => onNav(target)}
-            className={`shrink-0 cursor-pointer border-b-2 px-3 py-2.5 text-sm font-semibold ${
-              screen === target
-                ? "border-red text-navy"
-                : "border-transparent text-muted"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
+      <Hazard />
     </header>
   )
 }
@@ -439,90 +555,100 @@ function HomeScreen({
     }, 900)
   }
 
+  const tabs: [typeof mode, string][] = [
+    ["plate", "Patente"],
+    ["vin", "VIN"],
+    ["data", "Marca y modelo"],
+  ]
+  const selectTab = (value: typeof mode) => {
+    setMode(value)
+    setError("")
+    setNotFound(false)
+  }
+  const onTabKey = (event: React.KeyboardEvent, index: number) => {
+    if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return
+    event.preventDefault()
+    const next = (index + (event.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length
+    selectTab(tabs[next][0])
+    document.getElementById(`tab-${tabs[next][0]}`)?.focus()
+  }
+  const selectClass =
+    "w-full rounded-lg bg-white px-3 py-3 text-base outline-none disabled:cursor-not-allowed disabled:bg-bg disabled:text-muted"
+
   return (
     <main>
-      <section className="border-b border-border bg-white">
-        <div className="mx-auto grid max-w-6xl gap-10 px-5 py-12 lg:grid-cols-[1.05fr_.95fr] lg:py-16">
-          <div className="self-center">
-            <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-green-light px-3 py-1.5 text-sm font-bold text-green">
-              <span className="size-1.5 rounded-full bg-green" />
-              Gratuito · Multimarca · Sin registro
-            </span>
-            <h1 className="font-display text-4xl font-bold leading-[1.05] tracking-tight text-navy sm:text-5xl">
-              La seguridad de tu auto,
-              <span className="block text-red">en claro y a tiempo.</span>
-            </h1>
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-muted">
-              Consultá campañas de seguridad por patente, VIN o datos del
-              vehículo. Si hay algo pendiente, te explicamos el riesgo y cómo
-              resolverlo gratis.
+      <section>
+        <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 py-12 lg:grid-cols-[1.05fr_.95fr] lg:py-16">
+          <div>
+            <p className="mb-5 inline-flex items-center gap-2 rounded bg-ink px-3 py-2 text-sm font-bold uppercase tracking-[0.1em] text-signal">
+              <Icon name="alert" className="size-4" />
+              Antes de comprar un usado
             </p>
-            <div className="mt-7 grid grid-cols-3 gap-3">
-              {[
-                [String(CATALOG.length), "modelos"],
-                [String(CAMPAIGNS.length), "campañas demo"],
-                ["0", "costo"],
-              ].map(([number, label]) => (
-                <div key={label} className="border-l-2 border-red pl-3">
-                  <div className="font-display text-xl font-bold text-navy">
-                    {number}
-                  </div>
-                  <div className="text-sm text-muted">{label}</div>
-                </div>
-              ))}
-            </div>
+            <h1 className="font-display text-[56px] font-extrabold leading-[0.92] sm:text-7xl lg:text-[88px]">
+              ¿Ese auto tiene un recall sin reparar?
+            </h1>
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted sm:text-xl">
+              Ingresá la patente y en segundos sabés si el fabricante llamó a
+              revisión ese modelo, qué riesgo implica y cómo repararlo gratis.
+              Te llevás un informe para compartir con el vendedor.
+            </p>
           </div>
 
-          <div className="rounded-2xl border border-border bg-surface p-5 shadow-lg shadow-navy/5 sm:p-7">
+          <form
+            onSubmit={(event) => {
+              event.preventDefault()
+              submit()
+            }}
+            className="card-signal rounded-xl bg-surface p-5 sm:p-7"
+            aria-labelledby="search-title"
+          >
             <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="font-display text-xl font-bold text-navy">
-                  Consultá tu vehículo
-                </h2>
-                <p className="mt-1 text-base text-muted">
-                  Elegí la opción que te resulte más fácil.
-                </p>
-              </div>
+              <h2 id="search-title" className="font-display text-3xl font-extrabold">
+                Consultá un vehículo
+              </h2>
               <button
+                type="button"
                 onClick={clear}
-                className="cursor-pointer text-sm font-semibold text-muted underline decoration-border underline-offset-4 hover:text-navy"
+                className="min-h-11 cursor-pointer px-1 text-base font-semibold text-ink underline underline-offset-4"
               >
                 Limpiar
               </button>
             </div>
 
-            <div className="mt-5 grid grid-cols-3 rounded-lg bg-bg p-1">
-              {[
-                ["plate", "Patente"],
-                ["vin", "VIN"],
-                ["data", "Marca y modelo"],
-              ].map(([value, label]) => (
+            <div
+              role="tablist"
+              aria-label="Tipo de búsqueda"
+              className="mt-5 grid grid-cols-3 overflow-hidden rounded-md border-2 border-ink"
+            >
+              {tabs.map(([value, label], index) => (
                 <button
                   key={value}
-                  onClick={() => {
-                    setMode(value as typeof mode)
-                    setError("")
-                    setNotFound(false)
-                  }}
-                  className={`cursor-pointer rounded-md px-2 py-2 text-sm font-bold transition ${
-                    mode === value
-                      ? "bg-white text-navy shadow-sm"
-                      : "text-muted hover:text-navy"
-                  }`}
+                  id={`tab-${value}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === value}
+                  aria-controls="search-panel"
+                  tabIndex={mode === value ? 0 : -1}
+                  onClick={() => selectTab(value)}
+                  onKeyDown={(event) => onTabKey(event, index)}
+                  className={`min-h-12 cursor-pointer px-2 text-base font-bold leading-tight ${
+                    index > 0 ? "border-l-2 border-ink" : ""
+                  } ${mode === value ? "bg-ink text-white" : "bg-white text-ink hover:bg-bg"}`}
                 >
                   {label}
                 </button>
               ))}
             </div>
 
-            <div className="mt-5 min-h-32">
+            <div id="search-panel" role="tabpanel" aria-labelledby={`tab-${mode}`} className="mt-5 min-h-36">
               {mode === "plate" && (
-                <label className="block">
-                  <span className="mb-2 block text-sm font-bold uppercase tracking-wide text-navy">
-                    Patente
-                  </span>
-                  <div className="flex gap-2">
+                <div>
+                  <label htmlFor="plate-input" className="mb-2 block text-base font-bold">
+                    Patente del vehículo
+                  </label>
+                  <PlateFrame>
                     <input
+                      id="plate-input"
                       value={plate}
                       onChange={(event) =>
                         setPlate(
@@ -533,32 +659,23 @@ function HomeScreen({
                         )
                       }
                       placeholder="AB 123 CD"
-                      className="min-w-0 flex-1 rounded-lg border border-border px-4 py-3 font-mono uppercase tracking-widest outline-none transition placeholder:tracking-normal focus:border-navy focus:ring-2 focus:ring-navy/10"
+                      autoComplete="off"
+                      className="plate-input w-full border-0 bg-transparent px-2 py-3 text-center font-mono text-4xl font-bold uppercase tracking-[0.12em] outline-none sm:text-[44px]"
                       aria-describedby="plate-help"
                     />
-                    <button
-                      onClick={() => onNav("scanner")}
-                      className="flex cursor-pointer items-center gap-2 rounded-lg bg-navy px-4 text-base font-bold text-white transition hover:bg-navy-mid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy"
-                    >
-                      <Icon name="camera" className="size-5" />
-                      <span className="hidden sm:inline">Escanear</span>
-                    </button>
-                  </div>
-                  <span
-                    id="plate-help"
-                    className="mt-2 block text-sm text-muted"
-                  >
-                    Formato Mercosur o anterior. También podés escanear la
-                    cédula verde.
-                  </span>
-                </label>
+                  </PlateFrame>
+                  <p id="plate-help" className="mt-2 text-sm text-muted sm:text-base">
+                    Formato Mercosur (AB 123 CD) o anterior (ABC 123).
+                  </p>
+                </div>
               )}
               {mode === "vin" && (
-                <label className="block">
-                  <span className="mb-2 block text-sm font-bold uppercase tracking-wide text-navy">
+                <div>
+                  <label htmlFor="vin-input" className="mb-2 block text-base font-bold">
                     Número VIN
-                  </span>
+                  </label>
                   <input
+                    id="vin-input"
                     value={vin}
                     onChange={(event) =>
                       setVin(
@@ -569,30 +686,23 @@ function HomeScreen({
                       )
                     }
                     placeholder="8AGF19U0BCR123456"
-                    className="w-full rounded-lg border border-border px-4 py-3 font-mono uppercase tracking-wider outline-none transition focus:border-navy focus:ring-2 focus:ring-navy/10"
+                    aria-describedby="vin-help vin-count"
+                    className="w-full rounded-lg px-4 py-3 font-mono text-xl uppercase tracking-wider outline-none"
                   />
-                  <div className="mt-2 flex justify-between gap-3 text-sm">
-                    <span className="text-muted">
-                      Está en la cédula verde o junto al parabrisas.
+                  <div className="mt-2 flex justify-between gap-3 text-sm sm:text-base">
+                    <span id="vin-help" className="text-muted">
+                      Está en la cédula y junto al parabrisas.
                     </span>
-                    <span
-                      className={
-                        vin.length === 17
-                          ? "font-bold text-green"
-                          : "text-muted"
-                      }
-                    >
+                    <span id="vin-count" className={vin.length === 17 ? "font-bold text-ok" : "text-muted"}>
                       {vin.length}/17
                     </span>
                   </div>
-                </label>
+                </div>
               )}
               {mode === "data" && (
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <label>
-                    <span className="mb-2 block text-sm font-bold uppercase tracking-wide text-navy">
-                      Marca
-                    </span>
+                  <label className="block">
+                    <span className="mb-2 block text-base font-bold">Marca</span>
                     <select
                       value={brand}
                       onChange={(event) => {
@@ -601,7 +711,7 @@ function HomeScreen({
                         setVersion("")
                         setYear("")
                       }}
-                      className="w-full rounded-lg border border-border bg-white px-3 py-3 text-base outline-none focus:border-navy focus:ring-2 focus:ring-navy/10"
+                      className={selectClass}
                     >
                       <option value="">Elegir</option>
                       {brands().map((item) => (
@@ -609,10 +719,8 @@ function HomeScreen({
                       ))}
                     </select>
                   </label>
-                  <label>
-                    <span className="mb-2 block text-sm font-bold uppercase tracking-wide text-navy">
-                      Modelo
-                    </span>
+                  <label className="block">
+                    <span className="mb-2 block text-base font-bold">Modelo</span>
                     <select
                       value={model}
                       disabled={!brand}
@@ -621,7 +729,7 @@ function HomeScreen({
                         setVersion("")
                         setYear("")
                       }}
-                      className="w-full rounded-lg border border-border bg-white px-3 py-3 text-base outline-none disabled:cursor-not-allowed disabled:bg-bg disabled:text-muted focus:border-navy"
+                      className={selectClass}
                     >
                       <option value="">Elegir</option>
                       {modelsOf(brand).map((item) => (
@@ -629,10 +737,8 @@ function HomeScreen({
                       ))}
                     </select>
                   </label>
-                  <label>
-                    <span className="mb-2 block text-sm font-bold uppercase tracking-wide text-navy">
-                      Versión
-                    </span>
+                  <label className="block">
+                    <span className="mb-2 block text-base font-bold">Versión</span>
                     <select
                       value={version}
                       disabled={!model}
@@ -640,7 +746,7 @@ function HomeScreen({
                         setVersion(event.target.value)
                         setYear("")
                       }}
-                      className="w-full rounded-lg border border-border bg-white px-3 py-3 text-base outline-none disabled:cursor-not-allowed disabled:bg-bg disabled:text-muted focus:border-navy"
+                      className={selectClass}
                     >
                       <option value="">Elegir</option>
                       {versionsOf(brand, model).map((item) => (
@@ -648,15 +754,13 @@ function HomeScreen({
                       ))}
                     </select>
                   </label>
-                  <label>
-                    <span className="mb-2 block text-sm font-bold uppercase tracking-wide text-navy">
-                      Año
-                    </span>
+                  <label className="block">
+                    <span className="mb-2 block text-base font-bold">Año</span>
                     <select
                       value={year}
                       disabled={!version}
                       onChange={(event) => setYear(event.target.value)}
-                      className="w-full rounded-lg border border-border bg-white px-3 py-3 text-base outline-none disabled:cursor-not-allowed disabled:bg-bg disabled:text-muted focus:border-navy"
+                      className={selectClass}
                     >
                       <option value="">Elegir</option>
                       {yearsOf(brand, model).map((item) => (
@@ -671,16 +775,16 @@ function HomeScreen({
             {error && (
               <div
                 role="alert"
-                className="mb-3 flex items-center gap-2 rounded-lg bg-red-light px-3 py-2 text-sm font-semibold text-red"
+                className="mb-3 flex items-center gap-2 rounded-lg border-2 border-risk-high bg-risk-high-light px-3 py-2 text-base font-semibold text-risk-high"
               >
-                <Icon name="alert" className="size-4" />
+                <Icon name="alert" className="size-5 shrink-0" />
                 {error}
               </div>
             )}
             {notFound && (
               <div
                 role="status"
-                className="mb-3 rounded-xl border border-dashed border-border bg-white px-5 py-6 text-center"
+                className="mb-3 rounded-lg border-2 border-dashed border-graphite bg-white px-5 py-5 text-center"
               >
                 <p className="text-base leading-relaxed text-muted">
                   No encontramos ese vehículo en la base de demostración. Probá
@@ -688,35 +792,101 @@ function HomeScreen({
                   modelo.
                 </p>
                 <button
-                  onClick={() => {
-                    setMode("data")
-                    setNotFound(false)
-                    setError("")
-                  }}
-                  className="mt-4 cursor-pointer rounded-lg bg-navy px-5 py-2.5 text-sm font-bold text-white hover:bg-navy-mid"
+                  type="button"
+                  onClick={() => selectTab("data")}
+                  className="mt-4 min-h-11 cursor-pointer rounded-lg bg-ink px-5 text-base font-bold text-white"
                 >
                   Buscar por marca y modelo
                 </button>
               </div>
             )}
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex min-h-14 flex-[1_1_220px] cursor-pointer items-center justify-center gap-2 rounded-lg border-[3px] border-ink bg-signal font-display text-[28px] font-extrabold text-ink disabled:cursor-wait disabled:opacity-80"
+              >
+                {loading ? (
+                  <>
+                    <span className="size-5 animate-spin rounded-full border-[3px] border-ink/30 border-t-ink" aria-hidden="true" />
+                    Consultando…
+                  </>
+                ) : (
+                  <>
+                    <Icon name="search" className="size-6" />
+                    Consultar
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => onNav("scanner")}
+                className="flex min-h-14 flex-[0_1_auto] cursor-pointer items-center gap-2 rounded-lg border-[3px] border-ink bg-white px-5 text-base font-bold"
+              >
+                <Icon name="camera" className="size-5" />
+                Escanear cédula
+              </button>
+            </div>
+            <p className="sr-only" aria-live="polite">
+              {loading ? "Consultando campañas…" : ""}
+            </p>
+          </form>
+        </div>
+      </section>
+
+      <section aria-label="Datos de AvisAR" className="bg-ink text-white">
+        <div className="mx-auto grid max-w-6xl gap-6 px-5 py-7 sm:grid-cols-3">
+          {[
+            [String(CATALOG.length), "modelos del parque real"],
+            [String(CAMPAIGNS.length), "campañas de demostración"],
+            ["$0", "la consulta y la reparación"],
+          ].map(([number, label]) => (
+            <div key={label}>
+              <p className="font-display text-5xl font-extrabold text-signal">{number}</p>
+              <p className="mt-1 text-base text-line">{label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-5 py-14">
+        <h2 className="font-display text-5xl font-extrabold">Cómo funciona</h2>
+        <ol className="mt-7 grid gap-5 md:grid-cols-3">
+          {[
+            ["Ingresás la patente", "O el VIN que figura en la cédula y en el parabrisas."],
+            ["Ves el estado del auto", "Campañas pendientes o reparadas, con el riesgo explicado sin tecnicismos."],
+            ["Compartís el informe", "Por WhatsApp o en PDF, para negociar con datos o pedir la reparación antes de cerrar."],
+          ].map(([title, text], index) => (
+            <li key={title} className="flex flex-col gap-3 rounded-lg border-2 border-ink bg-white p-6">
+              <Diamond>{index + 1}</Diamond>
+              <h3 className="mt-2 text-xl font-bold">{title}</h3>
+              <p className="text-base leading-relaxed text-muted">{text}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-5 pb-14">
+        <h2 className="font-display text-5xl font-extrabold">Buscá por marca y modelo</h2>
+        <p className="mt-3 max-w-2xl text-lg text-muted">
+          ¿No tenés la patente a mano? Elegí el tipo de vehículo y completá marca, modelo y año.
+        </p>
+        <div className="mt-7 grid grid-cols-2 gap-4 md:grid-cols-4">
+          {(["sedan", "suv", "pickup", "hatch"] as BodyType[]).map((type) => (
             <button
-              onClick={() => submit()}
-              disabled={loading}
-              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red py-3.5 text-base font-bold text-white transition hover:bg-red/90 disabled:cursor-wait disabled:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red"
+              key={type}
+              type="button"
+              onClick={() => {
+                selectTab("data")
+                document.getElementById("search-title")?.scrollIntoView({ behavior: "smooth", block: "center" })
+                window.setTimeout(() => document.getElementById("tab-data")?.focus(), 300)
+              }}
+              className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-ink bg-white p-5 text-ink transition hover:bg-signal"
             >
-              {loading ? (
-                <>
-                  <span className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                  Consultando fuentes…
-                </>
-              ) : (
-                <>
-                  <Icon name="search" className="size-4" />
-                  Consultar campañas
-                </>
-              )}
+              <CarSilhouette type={type} className="h-16 w-full max-w-44" />
+              <span className="text-lg font-bold">{BODY_LABEL[type]}</span>
             </button>
-          </div>
+          ))}
         </div>
       </section>
 
@@ -827,7 +997,7 @@ function ScannerScreen({
         <div className="absolute inset-0 bg-gradient-to-br from-navy-mid to-navy" />
         <div className="absolute inset-10 flex items-center justify-center rounded-xl border-2 border-white/80">
           {phase === "scanning" && (
-            <span className="scanner-line absolute left-0 right-0 h-0.5 bg-red shadow-lg" />
+            <span className="scanner-line absolute left-0 right-0 h-1 bg-signal shadow-lg" />
           )}
           {phase === "idle" && (
             <p className="text-base font-semibold text-white/60">
@@ -866,6 +1036,111 @@ function ScannerScreen({
   )
 }
 
+function verificationCode(vehicle: AppVehicle) {
+  const source = `${vehicle.plate}|${vehicle.consultedAt}|${vehicle.recalls.map((r) => r.id).join(",")}`
+  let hash = 0
+  for (const char of source) hash = (hash * 31 + char.charCodeAt(0)) >>> 0
+  const code = hash.toString(36).toUpperCase().padStart(7, "0").slice(0, 7)
+  return `AV-${code.slice(0, 4)}-${code.slice(4)}`
+}
+
+function reportText(vehicle: AppVehicle) {
+  const lines = [
+    `Informe AvisAR · ${vehicle.consultedAt}`,
+    `${vehicle.plate} · ${vehicle.brand} ${vehicle.model} ${vehicle.version} ${vehicle.year}`,
+    vehicle.recalls.length === 0
+      ? "Sin campañas de seguridad pendientes."
+      : `${vehicle.recalls.length} campaña(s) pendiente(s):`,
+    ...vehicle.recalls.map((recall) => `• ${recall.campaign} · ${riskLabel[recall.risk]} · ${recall.title}`),
+    `Código de verificación: ${verificationCode(vehicle)}`,
+    "Datos de demostración (prototipo educativo).",
+  ]
+  return lines.join("\n")
+}
+
+function ShareReport({ vehicle }: { vehicle: AppVehicle }) {
+  const [copied, setCopied] = useState("")
+  const pending = vehicle.recalls.length
+  const critical = vehicle.recalls.filter((recall) => recall.risk === "CRÍTICO").length
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(reportText(vehicle))
+      setCopied("Resumen copiado al portapapeles.")
+    } catch {
+      setCopied("No se pudo copiar. Seleccioná el texto del informe manualmente.")
+    }
+    window.setTimeout(() => setCopied(""), 3000)
+  }
+  return (
+    <aside aria-labelledby="report-title" className="flex flex-col gap-4">
+      <h2 id="report-title" className="font-display text-4xl font-extrabold">
+        Informe para compartir
+      </h2>
+      <div className="card-signal overflow-hidden rounded-xl bg-white">
+        <div className="flex items-center justify-between gap-3 bg-ink px-5 py-3 text-white">
+          <span className="font-display text-2xl font-extrabold">
+            AVIS<span className="ml-0.5 bg-signal px-1 text-ink">AR</span> · Informe
+          </span>
+          <span className="text-sm text-line">{vehicle.consultedAt}</span>
+        </div>
+        <div className="flex flex-col gap-3 p-5">
+          <p className="font-mono text-2xl font-bold tracking-[0.1em]">{vehicle.plate}</p>
+          <p className="text-base">
+            {vehicle.brand} {vehicle.model} {vehicle.year} · {BODY_LABEL[bodyTypeOf(vehicle.model)]}
+          </p>
+          <dl className="flex flex-col gap-2 border-t border-line pt-3 text-base">
+            <div className="flex justify-between gap-3">
+              <dt>Campañas pendientes</dt>
+              <dd className={`font-bold ${pending === 0 ? "text-ok" : "text-risk-high"}`}>
+                {pending === 0 ? "Ninguna" : `${pending}${critical ? ` · ${critical} crítica${critical > 1 ? "s" : ""}` : ""}`}
+              </dd>
+            </div>
+          </dl>
+          <p className="text-sm text-muted">
+            Código de verificación{" "}
+            <span className="font-mono font-semibold text-ink">{verificationCode(vehicle)}</span>
+          </p>
+        </div>
+      </div>
+      <div className="flex flex-col gap-3 print:hidden">
+        <a
+          href={`https://wa.me/?text=${encodeURIComponent(reportText(vehicle))}`}
+          target="_blank"
+          rel="noreferrer"
+          className="flex min-h-14 items-center justify-center gap-2 rounded-lg bg-ink text-base font-bold text-white"
+        >
+          <Icon name="share" className="size-5" />
+          Compartir por WhatsApp
+          <span className="sr-only">(se abre en una pestaña nueva)</span>
+        </a>
+        <button
+          type="button"
+          onClick={() => window.print()}
+          className="flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-lg border-[3px] border-ink bg-white text-base font-bold"
+        >
+          <Icon name="download" className="size-5" />
+          Descargar PDF
+        </button>
+        <button
+          type="button"
+          onClick={copy}
+          className="flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-lg border-[3px] border-ink bg-white text-base font-bold"
+        >
+          <Icon name="copy" className="size-5" />
+          Copiar resumen
+        </button>
+        <p role="status" aria-live="polite" className="min-h-6 text-base font-semibold text-ok">
+          {copied}
+        </p>
+      </div>
+      <p className="text-sm leading-relaxed text-muted">
+        Mostrale el informe al vendedor o al comprador. Antes de firmar, volvé a
+        consultar la patente para confirmar que no aparecieron campañas nuevas.
+      </p>
+    </aside>
+  )
+}
+
 function ResultsScreen({
   vehicle,
   onNav,
@@ -885,164 +1160,179 @@ function ResultsScreen({
   const hasCritical = vehicle.recalls.some(
     (recall) => recall.risk === "CRÍTICO",
   )
+  const count = vehicle.recalls.length
+  const body = bodyTypeOf(vehicle.model)
   return (
-    <main className="mx-auto max-w-4xl px-5 py-10">
-      <BackButton label="Nueva consulta" onClick={() => onNav("home")} />
-      <DemoNotice />
-      <section
-        className={`mt-5 rounded-2xl p-6 sm:p-8 ${
-          vehicle.recalls.length === 0
-            ? "border border-green/20 bg-green-light"
-            : hasCritical
-              ? "bg-red text-white"
-              : "bg-amber text-white"
-        }`}
-      >
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-          <div
-            className={`flex size-14 shrink-0 items-center justify-center rounded-xl ${
-              vehicle.recalls.length === 0
-                ? "bg-white text-green"
-                : "bg-white/15 text-white"
+    <main className="mx-auto max-w-6xl px-5 py-10">
+      <div className="print:hidden">
+        <BackButton label="Nueva consulta" onClick={() => onNav("home")} />
+      </div>
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-10 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="flex min-w-0 flex-col gap-6">
+          <section
+            aria-labelledby="vehicle-title"
+            className="flex flex-wrap items-center gap-6 rounded-xl border-2 border-ink bg-white p-6"
+          >
+            <CarSilhouette type={body} className="h-20 w-52 shrink-0 text-ink" label={`Silueta de ${BODY_LABEL[body]}`} />
+            <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-2">
+              <PlateFrame small>
+                <p className="px-4 py-1 text-center font-mono text-2xl font-bold tracking-[0.12em]">
+                  {vehicle.plate}
+                </p>
+              </PlateFrame>
+              <h1 id="vehicle-title" className="mt-1 font-display text-4xl font-extrabold sm:text-5xl">
+                {vehicle.brand} {vehicle.model} {vehicle.year}
+              </h1>
+              <p className="text-base text-muted">
+                {BODY_LABEL[body]} · {vehicle.version}
+                {vehicle.vin && (
+                  <>
+                    {" "}· VIN <span className="font-mono">{vehicle.vin}</span>
+                  </>
+                )}
+              </p>
+            </div>
+          </section>
+
+          <section
+            role={count > 0 ? "alert" : "status"}
+            className={`flex flex-wrap items-center gap-5 rounded-xl p-6 sm:p-7 ${
+              count === 0
+                ? "border-2 border-ok bg-ok-light text-ink"
+                : hasCritical
+                  ? "bg-risk-high text-white"
+                  : "border-[3px] border-ink bg-risk-mid text-ink"
             }`}
           >
-            <Icon
-              name={vehicle.recalls.length === 0 ? "check" : "alert"}
-              className="size-7"
-            />
-          </div>
-          <div>
-            <p className="text-sm font-bold uppercase tracking-widest opacity-75">
-              {vehicle.brand} {vehicle.model} {vehicle.version} {vehicle.year} ·{" "}
-              {vehicle.plate}
-            </p>
-            <h1 className="mt-1 font-display text-2xl font-bold sm:text-3xl">
-              {vehicle.recalls.length === 0
-                ? "No encontramos campañas pendientes"
-                : `${vehicle.recalls.length} ${
-                    vehicle.recalls.length === 1
-                      ? "recall requiere"
-                      : "recalls requieren"
-                  } tu atención`}
-            </h1>
-            <p className="mt-2 max-w-2xl text-base opacity-80">
-              {vehicle.recalls.length === 0
-                ? "Podés quedarte tranquilo. Activá una alerta y te avisaremos si aparece una campaña nueva."
-                : "Revisá cada campaña y priorizá las de mayor riesgo. Las reparaciones de recall son gratuitas."}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {vehicle.recalls.length === 0 ? (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <button
-            onClick={() => onNav("subscribe")}
-            className="flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-navy py-3.5 text-base font-bold text-white hover:bg-navy-mid"
-          >
-            <Icon name="bell" className="size-4" />
-            Activar alerta preventiva
-          </button>
-          <button
-            onClick={() => onNav("queries")}
-            className="cursor-pointer rounded-lg border border-border bg-white py-3.5 text-base font-bold text-navy hover:border-navy"
-          >
-            Ver mis consultas
-          </button>
-        </div>
-      ) : (
-        <>
-          <div className="mt-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-widest text-muted">
-                Campañas encontradas
+            <span
+              className={`flex size-16 shrink-0 items-center justify-center rounded-full ${
+                count === 0 ? "bg-ok text-white" : hasCritical ? "bg-white text-risk-high" : "bg-ink text-risk-mid"
+              }`}
+            >
+              <Icon name={count === 0 ? "check" : "alert"} className="size-9" />
+            </span>
+            <div className="flex-[1_1_320px]">
+              <p className="font-display text-4xl font-extrabold">
+                {count === 0
+                  ? "Sin campañas pendientes"
+                  : `${count} ${count === 1 ? "campaña pendiente" : "campañas pendientes"}${hasCritical ? " · riesgo crítico" : ""}`}
               </p>
-              <h2 className="mt-1 font-display text-xl font-bold text-navy">
-                {visible.length} de {vehicle.recalls.length} campañas
-              </h2>
+              <p className="mt-2 max-w-2xl text-lg leading-relaxed">
+                {count === 0
+                  ? "No encontramos campañas de seguridad para este vehículo. Activá una alerta y te avisamos si aparece una nueva."
+                  : hasCritical
+                    ? "No lo uses hasta repararlo. La reparación es gratis en cualquier concesionario oficial de la marca."
+                    : "Reparalo pronto. Las reparaciones de recall son gratuitas en concesionarios oficiales."}
+              </p>
             </div>
-            <div
-              className="flex flex-wrap gap-2"
-              aria-label="Filtrar por riesgo"
-            >
-              {(["TODOS", "CRÍTICO", "ALTO", "MEDIO"] as const).map((item) => (
-                <button
-                  key={item}
-                  onClick={() => setFilter(item)}
-                  className={`cursor-pointer rounded-full border px-3 py-1.5 text-sm font-bold transition ${
-                    filter === item
-                      ? "border-navy bg-navy text-white"
-                      : "border-border bg-white text-muted hover:border-navy hover:text-navy"
-                  }`}
-                >
-                  {item === "TODOS" ? "Todos" : item}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="mt-4 space-y-4">
-            {visible.map((recall) => (
-              <article
-                key={recall.id}
-                className="rounded-xl border border-border bg-white p-5 transition hover:border-navy/30 hover:shadow-md"
+          </section>
+
+          <DemoNotice />
+
+          {count === 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 print:hidden">
+              <button
+                onClick={() => onNav("subscribe")}
+                className="flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-lg border-[3px] border-ink bg-signal text-lg font-bold"
               >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="font-mono text-sm text-muted">
-                      {recall.campaign}
-                    </p>
-                    <h3 className="mt-2 font-display text-lg font-bold text-navy">
-                      {recall.title}
-                    </h3>
-                    <p className="mt-1 text-base font-semibold text-navy-mid">
-                      {recall.component}
-                    </p>
-                  </div>
-                  <Badge risk={recall.risk} />
+                <Icon name="bell" className="size-5" />
+                Activar alerta preventiva
+              </button>
+              <button
+                onClick={() => onNav("queries")}
+                className="min-h-14 cursor-pointer rounded-lg border-[3px] border-ink bg-white text-lg font-bold"
+              >
+                Ver mis consultas
+              </button>
+            </div>
+          ) : (
+            <section aria-labelledby="campaigns-title">
+              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                <div>
+                  <h2 id="campaigns-title" className="font-display text-4xl font-extrabold">
+                    Campañas de este vehículo
+                  </h2>
+                  <p className="mt-1 text-base text-muted">
+                    Mostrando {visible.length} de {count}
+                  </p>
                 </div>
-                <p className="mt-4 text-base leading-relaxed text-muted">
-                  {recall.description}
-                </p>
-                <p className="mt-4 flex items-center gap-2 text-sm font-bold text-green">
-                  <Icon name="check" className="size-4" />
-                  Reparación gratuita en concesionario oficial
-                </p>
-                <div className="mt-5 flex flex-wrap gap-3">
-                  <button
-                    onClick={() => onDetail(recall)}
-                    className="flex cursor-pointer items-center gap-2 text-base font-bold text-navy hover:text-red"
-                  >
-                    Ver detalle
-                    <Icon name="arrow" className="size-4" />
-                  </button>
-                  <button
-                    onClick={() => onBook(recall)}
-                    className="flex cursor-pointer items-center gap-2 rounded-lg bg-red px-4 py-2 text-sm font-bold text-white hover:bg-red/90"
-                  >
-                    <Icon name="calendar" className="size-4" />
-                    Reservar turno
-                  </button>
+                <div
+                  className="flex flex-wrap gap-2 print:hidden"
+                  role="group"
+                  aria-label="Filtrar por riesgo"
+                >
+                  {(["TODOS", "CRÍTICO", "ALTO", "MEDIO"] as const).map((item) => (
+                    <button
+                      key={item}
+                      onClick={() => setFilter(item)}
+                      aria-pressed={filter === item}
+                      className={`min-h-11 cursor-pointer rounded border-2 border-ink px-3 text-sm font-bold ${
+                        filter === item ? "bg-ink text-white" : "bg-white text-ink hover:bg-bg"
+                      }`}
+                    >
+                      {item === "TODOS" ? "Todas" : riskLabel[item]}
+                    </button>
+                  ))}
                 </div>
-              </article>
-            ))}
-          </div>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <button
-              onClick={() => onNav("home")}
-              className="flex-1 cursor-pointer rounded-lg border border-border bg-white py-3 text-base font-bold text-navy hover:border-navy"
-            >
-              Realizar nueva consulta
-            </button>
-            <button
-              onClick={() => onNav("subscribe")}
-              className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-navy py-3 text-base font-bold text-white hover:bg-navy-mid"
-            >
-              <Icon name="bell" className="size-4" />
-              Activar alertas
-            </button>
-          </div>
-        </>
-      )}
+              </div>
+              <div className="mt-5 space-y-4">
+                {visible.map((recall) => (
+                  <article
+                    key={recall.id}
+                    className={`rounded-lg border-2 bg-white p-5 sm:p-6 ${
+                      recall.risk === "CRÍTICO" ? "border-risk-high" : "border-ink"
+                    }`}
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <Badge risk={recall.risk} />
+                      <span className="font-mono text-sm text-muted">{recall.campaign}</span>
+                    </div>
+                    <h3 className="mt-3 text-2xl font-bold">{recall.title}</h3>
+                    <p className="mt-1 text-base font-semibold text-graphite">
+                      Componente: {recall.component}
+                    </p>
+                    <p className="mt-3 text-base leading-relaxed text-muted">
+                      {recall.description}
+                    </p>
+                    <div className="mt-5 flex flex-wrap items-center gap-3 print:hidden">
+                      <button
+                        onClick={() => onBook(recall)}
+                        className="flex min-h-13 cursor-pointer items-center gap-2 rounded-lg border-[3px] border-ink bg-signal px-5 font-display text-2xl font-extrabold"
+                      >
+                        <Icon name="calendar" className="size-5" />
+                        Pedir turno gratis
+                      </button>
+                      <button
+                        onClick={() => onDetail(recall)}
+                        className="flex min-h-13 cursor-pointer items-center gap-2 px-3 text-base font-bold underline underline-offset-4"
+                      >
+                        Ver detalle
+                        <Icon name="arrow" className="size-4" />
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row print:hidden">
+                <button
+                  onClick={() => onNav("home")}
+                  className="min-h-13 flex-1 cursor-pointer rounded-lg border-[3px] border-ink bg-white text-base font-bold"
+                >
+                  Hacer otra consulta
+                </button>
+                <button
+                  onClick={() => onNav("subscribe")}
+                  className="flex min-h-13 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-ink text-base font-bold text-white"
+                >
+                  <Icon name="bell" className="size-5" />
+                  Activar alertas
+                </button>
+              </div>
+            </section>
+          )}
+        </div>
+        <ShareReport vehicle={vehicle} />
+      </div>
     </main>
   )
 }
@@ -1135,7 +1425,7 @@ function DetailScreen({
               )}
             </section>
           ))}
-          <section className="rounded-xl border border-border bg-white p-5">
+          <section className="rounded-xl border-2 border-ink bg-white p-5">
             <h2 className="font-display text-base font-bold text-navy">
               Datos de la campaña
             </h2>
@@ -1156,7 +1446,7 @@ function DetailScreen({
           </section>
         </div>
 
-        <aside className="h-fit rounded-2xl border border-border bg-white p-6 lg:sticky lg:top-24">
+        <aside className="h-fit rounded-2xl border-2 border-ink bg-white p-6 lg:sticky lg:top-24">
           <p className="text-sm font-bold uppercase tracking-widest text-red">
             Seguimiento personal
           </p>
@@ -1195,7 +1485,7 @@ function DetailScreen({
               ) : (
                 <button
                   onClick={onBook}
-                  className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red py-3 text-base font-bold text-white hover:bg-red/90"
+                  className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-[3px] border-ink bg-signal py-3 text-base font-bold text-ink hover:bg-risk-mid"
                 >
                   <Icon name="calendar" className="size-4" />
                   Reservar turno de reparación
@@ -1204,7 +1494,7 @@ function DetailScreen({
               <RepairProgress status={status} />
               {appointment?.status === "Programado" &&
                 appointmentIsPast(appointment) && (
-                  <div className="mt-5 rounded-xl border border-border bg-bg p-4">
+                  <div className="mt-5 rounded-xl border-2 border-ink bg-bg p-4">
                     <p className="text-base font-bold text-navy">
                       ¿Se realizó la reparación en tu turno del{" "}
                       {formatAppointmentDate(appointment.date)}?
@@ -1218,7 +1508,7 @@ function DetailScreen({
                       </button>
                       <button
                         onClick={onReprogramAppointment}
-                        className="cursor-pointer rounded-lg border border-border bg-white px-3 py-2.5 text-sm font-bold text-navy"
+                        className="cursor-pointer rounded-lg border-2 border-ink bg-white px-3 py-2.5 text-sm font-bold text-navy"
                       >
                         No, reprogramar
                       </button>
@@ -1272,7 +1562,7 @@ function DetailScreen({
               </p>
             </>
           ) : (
-            <div className="mt-5 rounded-xl border border-border bg-bg p-5 text-center">
+            <div className="mt-5 rounded-xl border-2 border-ink bg-bg p-5 text-center">
               <span className="mx-auto flex size-11 items-center justify-center rounded-full bg-white text-navy">
                 <Icon name="lock" className="size-5" />
               </span>
@@ -1359,7 +1649,7 @@ function QueriesScreen({
             return (
               <article
                 key={vehicle.id}
-                className="rounded-xl border border-border bg-white p-5"
+                className="rounded-xl border-2 border-ink bg-white p-5"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -1516,7 +1806,7 @@ function SubscribeScreen({
       <p className="mt-2 text-base text-muted">
         Elegí cómo querés recibir novedades. No necesitás instalar una app.
       </p>
-      <div className="mt-7 rounded-2xl border border-border bg-white p-6">
+      <div className="mt-7 rounded-2xl border-2 border-ink bg-white p-6">
         {vehicle && (
           <div className="mb-6 rounded-xl bg-bg p-4">
             <p className="text-sm font-bold uppercase tracking-wide text-muted">
@@ -1603,7 +1893,7 @@ function SubscribeScreen({
         )}
         <button
           onClick={submit}
-          className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red py-3.5 text-base font-bold text-white hover:bg-red/90"
+          className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-[3px] border-ink bg-signal py-3.5 text-base font-bold text-ink hover:bg-risk-mid"
         >
           <Icon name="bell" className="size-4" />
           Activar alerta
@@ -1685,7 +1975,7 @@ function MyAlertsScreen({
           {alerts.map((alert) => (
             <article
               key={alert.id}
-              className="flex flex-col gap-5 rounded-xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-5 rounded-xl border-2 border-ink bg-white p-5 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex items-start gap-4">
                 <span
@@ -1758,7 +2048,7 @@ function DealerMap({ dealer, number }: { dealer: AppDealer; number: number }) {
   const src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${dealer.lat},${dealer.lng}`
   const query = encodeURIComponent(`${dealer.address}, ${dealer.neighborhood}, Ciudad de Buenos Aires`)
   return (
-    <div className="flex h-full min-h-96 flex-col overflow-hidden rounded-2xl border border-border bg-white lg:sticky lg:top-6">
+    <div className="flex h-full min-h-96 flex-col overflow-hidden rounded-2xl border-2 border-ink bg-white lg:sticky lg:top-6">
       <iframe
         key={dealer.id}
         title={`Mapa: ubicación de ${dealer.name}`}
@@ -1828,7 +2118,7 @@ function DealersScreen({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Barrio o localidad"
-            className="w-full rounded-lg border border-border bg-white px-4 py-3 text-base outline-none focus:border-navy focus:ring-2 focus:ring-navy/10"
+            className="w-full rounded-lg border-2 border-ink bg-white px-4 py-3 text-base outline-none focus:border-navy focus:ring-2 focus:ring-navy/10"
           />
         </label>
         <button
@@ -1898,7 +2188,7 @@ function DealersScreen({
                   </div>
                   <button
                     onClick={() => onChoose(dealer)}
-                    className="cursor-pointer rounded-lg bg-red px-4 py-2.5 text-sm font-bold text-white hover:bg-red/90"
+                    className="cursor-pointer rounded-lg border-[3px] border-ink bg-signal px-4 py-2.5 text-sm font-bold text-ink hover:bg-risk-mid"
                   >
                     Elegir
                   </button>
@@ -1968,7 +2258,7 @@ function BookingScreen({
         Elegí día y horario
       </h1>
 
-      <div className="mt-7 grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-2">
+      <div className="mt-7 grid gap-3 rounded-2xl border-2 border-ink bg-white p-5 sm:grid-cols-2">
         <div>
           <p className="text-sm font-bold uppercase tracking-wide text-muted">
             Vehículo
@@ -1987,7 +2277,7 @@ function BookingScreen({
         </div>
       </div>
 
-      <section className="mt-6 rounded-2xl border border-border bg-white p-5">
+      <section className="mt-6 rounded-2xl border-2 border-ink bg-white p-5">
         <h2 className="font-display text-lg font-bold text-navy">Día</h2>
         <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
           {days.map((day) => {
@@ -2101,7 +2391,7 @@ function BookingScreen({
                 ? "+54 9 11 1234-5678"
                 : "nombre@ejemplo.com"
             }
-            className="w-full rounded-lg border border-border bg-white px-4 py-3 text-base outline-none focus:border-navy focus:ring-2 focus:ring-navy/10"
+            className="w-full rounded-lg border-2 border-ink bg-white px-4 py-3 text-base outline-none focus:border-navy focus:ring-2 focus:ring-navy/10"
           />
           <span className="mt-2 block text-sm text-muted">
             Usaremos este dato únicamente para el recordatorio simulado.
@@ -2135,7 +2425,7 @@ function BookingScreen({
             }
             onConfirm(date, time, channel, destination.trim())
           }}
-          className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red py-3.5 text-base font-bold text-white hover:bg-red/90"
+          className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-[3px] border-ink bg-signal py-3.5 text-base font-bold text-ink hover:bg-risk-mid"
         >
           <Icon name="calendar" className="size-4" />
           Confirmar turno
@@ -2182,7 +2472,7 @@ function BookingOkScreen({
   return (
     <main className="mx-auto max-w-2xl px-5 py-12">
       <DemoNotice text="Turno simulado: la agenda real es del concesionario." />
-      <div className="mt-6 rounded-2xl border border-border bg-white p-6 text-center sm:p-8">
+      <div className="mt-6 rounded-2xl border-2 border-ink bg-white p-6 text-center sm:p-8">
         <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-green-light text-green">
           <Icon name="check" className="size-8" />
         </span>
@@ -2191,7 +2481,7 @@ function BookingOkScreen({
         </h1>
         <p className="mt-2 font-mono text-base font-bold text-red">{appointment.code}</p>
 
-        <dl className="mt-7 divide-y divide-border rounded-xl border border-border text-left text-base">
+        <dl className="mt-7 divide-y divide-border rounded-xl border-2 border-ink text-left text-base">
           {[
             ["Concesionario", `${dealer?.name} · ${dealer?.address}`],
             ["Día y hora", `${formatAppointmentDate(appointment.date)} · ${appointment.time} h`],
@@ -2408,7 +2698,7 @@ function MyAppointmentsScreen({
             return (
               <article
                 key={appointment.id}
-                className="rounded-xl border border-border bg-white p-5"
+                className="rounded-xl border-2 border-ink bg-white p-5"
               >
                 <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
                   <div>
@@ -2450,7 +2740,7 @@ function MyAppointmentsScreen({
                       </button>
                       <button
                         onClick={() => onReprogram(appointment)}
-                        className="cursor-pointer rounded-lg border border-border bg-white px-4 py-2.5 text-sm font-bold text-navy"
+                        className="cursor-pointer rounded-lg border-2 border-ink bg-white px-4 py-2.5 text-sm font-bold text-navy"
                       >
                         No, reprogramar
                       </button>
@@ -2575,7 +2865,7 @@ function EducationScreen({ onSearch }: { onSearch: () => void }) {
           ].map(([number, title, text]) => (
             <div
               key={number}
-              className="rounded-xl border border-border bg-white p-5"
+              className="rounded-xl border-2 border-ink bg-white p-5"
             >
               <span className="font-mono text-base font-bold text-red">
                 {number}
@@ -2611,7 +2901,7 @@ function EducationScreen({ onSearch }: { onSearch: () => void }) {
             </li>
           </ol>
         </div>
-        <div className="rounded-2xl border border-border bg-white p-7">
+        <div className="rounded-2xl border-2 border-ink bg-white p-7">
           <p className="text-sm font-bold uppercase tracking-widest text-red">
             Identificación
           </p>
@@ -2641,7 +2931,7 @@ function EducationScreen({ onSearch }: { onSearch: () => void }) {
           {faqs.map(([question, answer], index) => (
             <div
               key={question}
-              className="overflow-hidden rounded-xl border border-border bg-white"
+              className="overflow-hidden rounded-xl border-2 border-ink bg-white"
             >
               <button
                 onClick={() => setOpen(open === index ? -1 : index)}
@@ -2680,6 +2970,283 @@ function EducationScreen({ onSearch }: { onSearch: () => void }) {
         >
           Buscar mi vehículo
         </button>
+      </section>
+    </main>
+  )
+}
+
+type BulkRow = { input: string; vehicle: AppVehicle | null }
+
+function worstRisk(vehicle: AppVehicle): Risk | null {
+  if (vehicle.recalls.some((r) => r.risk === "CRÍTICO")) return "CRÍTICO"
+  if (vehicle.recalls.some((r) => r.risk === "ALTO")) return "ALTO"
+  if (vehicle.recalls.some((r) => r.risk === "MEDIO")) return "MEDIO"
+  return null
+}
+
+function ProScreen({
+  onOpen,
+  onNav,
+  appointments,
+  isLoggedIn,
+}: {
+  onOpen: (vehicle: AppVehicle) => void
+  onNav: (screen: Screen) => void
+  appointments: AppAppointment[]
+  isLoggedIn: boolean
+}) {
+  const [text, setText] = useState("AB 123 CD\nAD 456 EF\nAA 000 AA")
+  const [rows, setRows] = useState<BulkRow[] | null>(null)
+  const [error, setError] = useState("")
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim().toUpperCase())
+    .filter(Boolean)
+    .slice(0, 200)
+
+  const run = (event?: React.FormEvent) => {
+    event?.preventDefault()
+    if (lines.length === 0) {
+      setError("Pegá al menos una patente o un VIN.")
+      return
+    }
+    setError("")
+    setRows(
+      lines.map((input) => {
+        const compact = input.replace(/[\s-]/g, "")
+        const vehicle = isValidVin(compact)
+          ? findVehicle({ mode: "vin", vin: compact })
+          : findVehicle({ mode: "plate", plate: input })
+        return { input, vehicle }
+      }),
+    )
+  }
+
+  const loadCsv = (file: File) => {
+    file.text().then((content) => {
+      const values = content
+        .split(/[\r\n,;]+/)
+        .map((value) => value.trim().replace(/^"|"$/g, ""))
+        .filter((value) => value && !/patente|vin/i.test(value))
+      setText(values.join("\n"))
+    })
+  }
+
+  const exportCsv = () => {
+    if (!rows) return
+    const header = "patente_o_vin,vehiculo,campanas_pendientes,riesgo_maximo"
+    const body = rows.map(({ input, vehicle }) =>
+      [
+        input,
+        vehicle ? `${vehicle.brand} ${vehicle.model} ${vehicle.year}` : "No encontrado",
+        vehicle ? vehicle.recalls.length : "",
+        vehicle ? (worstRisk(vehicle) ?? "Sin campañas") : "",
+      ].join(","),
+    )
+    const blob = new Blob([[header, ...body].join("\n")], { type: "text/csv;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = "avisar-consulta-masiva.csv"
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const found = rows?.filter((row) => row.vehicle) ?? []
+  const counts = {
+    high: found.filter((row) => worstRisk(row.vehicle!) === "CRÍTICO").length,
+    mid: found.filter((row) => ["ALTO", "MEDIO"].includes(worstRisk(row.vehicle!) ?? "")).length,
+    ok: found.filter((row) => !worstRisk(row.vehicle!)).length,
+    missing: (rows?.length ?? 0) - found.length,
+  }
+  const upcoming = appointments
+    .filter((appointment) => appointment.status === "Programado")
+    .slice(0, 3)
+
+  return (
+    <main className="mx-auto flex max-w-6xl flex-col gap-10 px-5 py-12">
+      <div className="flex flex-col gap-3">
+        <h1 className="font-display text-5xl font-extrabold sm:text-7xl">
+          Revisá todo tu stock de una vez
+        </h1>
+        <p className="max-w-3xl text-lg leading-relaxed text-muted sm:text-xl">
+          Pegá patentes o VIN, uno por línea, o subí un CSV. Te marcamos qué
+          unidades tienen campañas abiertas antes de entregarlas o publicarlas.
+        </p>
+      </div>
+
+      <section className="grid grid-cols-[minmax(0,1fr)] items-start gap-8 lg:grid-cols-[380px_minmax(0,1fr)]">
+        <form onSubmit={run} className="card-signal flex flex-col gap-4 rounded-xl bg-white p-6">
+          <label htmlFor="bulk-input" className="text-base font-bold">
+            Patentes o VIN (uno por línea)
+          </label>
+          <textarea
+            id="bulk-input"
+            rows={8}
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            aria-describedby="bulk-help"
+            className="resize-y rounded-md p-3 font-mono text-lg uppercase leading-relaxed tracking-wide"
+          />
+          <p id="bulk-help" className="text-base text-muted">
+            {lines.length} {lines.length === 1 ? "unidad" : "unidades"} · hasta 200 por consulta.
+          </p>
+          {error && (
+            <p role="alert" className="flex items-center gap-2 text-base font-bold text-risk-high">
+              <Icon name="alert" className="size-5" />
+              {error}
+            </p>
+          )}
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="submit"
+              className="min-h-14 flex-[1_1_200px] cursor-pointer rounded-lg border-[3px] border-ink bg-signal font-display text-[26px] font-extrabold"
+            >
+              Consultar {lines.length} {lines.length === 1 ? "unidad" : "unidades"}
+            </button>
+            <label className="flex min-h-14 cursor-pointer items-center gap-2 rounded-lg border-[3px] border-ink bg-white px-4 text-base font-bold focus-within:outline-[3px] focus-within:outline-offset-2 focus-within:outline-ink">
+              <Icon name="upload" className="size-5" />
+              Subir CSV
+              <input
+                type="file"
+                accept=".csv,text/csv,text/plain"
+                className="sr-only"
+                onChange={(event) => {
+                  const file = event.target.files?.[0]
+                  if (file) loadCsv(file)
+                }}
+              />
+            </label>
+          </div>
+        </form>
+
+        <div className="flex min-w-0 flex-col gap-4">
+          {!rows ? (
+            <div className="rounded-xl border-2 border-dashed border-graphite bg-white p-8 text-center">
+              <Icon name="building" className="mx-auto size-10" />
+              <p className="mt-3 text-lg font-bold">Los resultados aparecen acá</p>
+              <p className="mt-1 text-base text-muted">
+                Probá con las patentes de ejemplo y tocá «Consultar».
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-3" role="status" aria-live="polite">
+                <span className="inline-flex min-h-11 items-center gap-2 rounded bg-risk-high px-3 text-base font-bold text-white">
+                  <Icon name="alert" className="size-5" />
+                  {counts.high} riesgo crítico
+                </span>
+                <span className="inline-flex min-h-11 items-center gap-2 rounded border-2 border-ink bg-risk-mid px-3 text-base font-bold text-ink">
+                  <Icon name="wrench" className="size-5" />
+                  {counts.mid} riesgo alto o medio
+                </span>
+                <span className="inline-flex min-h-11 items-center gap-2 rounded bg-ok px-3 text-base font-bold text-white">
+                  <Icon name="check" className="size-5" />
+                  {counts.ok} sin campañas
+                </span>
+                {counts.missing > 0 && (
+                  <span className="inline-flex min-h-11 items-center rounded border-2 border-graphite bg-white px-3 text-base font-bold text-graphite">
+                    {counts.missing} no encontradas
+                  </span>
+                )}
+              </div>
+              <div className="relative overflow-x-auto rounded-lg border-2 border-ink bg-white">
+                <table className="w-full min-w-[640px] border-collapse text-base">
+                  <caption className="px-4 py-3 text-left text-lg font-bold">
+                    Resultado de la consulta
+                  </caption>
+                  <thead>
+                    <tr className="bg-ink text-left text-white">
+                      <th scope="col" className="px-4 py-3">Patente o VIN</th>
+                      <th scope="col" className="px-4 py-3">Vehículo</th>
+                      <th scope="col" className="px-4 py-3">Estado</th>
+                      <th scope="col" className="px-4 py-3">
+                        <span className="sr-only">Acción</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map(({ input, vehicle }, index) => {
+                      const risk = vehicle ? worstRisk(vehicle) : null
+                      return (
+                        <tr key={`${input}-${index}`} className="border-t border-line">
+                          <td className="px-4 py-3 font-mono font-bold tracking-wide">{input}</td>
+                          <td className="px-4 py-3">
+                            {vehicle ? `${vehicle.brand} ${vehicle.model} ${vehicle.year} · ${BODY_LABEL[bodyTypeOf(vehicle.model)]}` : "No encontrado en la base demo"}
+                          </td>
+                          <td className="px-4 py-3">
+                            {!vehicle ? (
+                              <span className="text-muted">Sin datos</span>
+                            ) : risk ? (
+                              <span className={`inline-flex items-center gap-1.5 font-bold ${risk === "CRÍTICO" ? "text-risk-high" : "text-risk-mid-text"}`}>
+                                <Icon name={risk === "CRÍTICO" ? "alert" : "wrench"} className="size-4" />
+                                {riskLabel[risk]} · {vehicle.recalls.length} {vehicle.recalls.length === 1 ? "campaña" : "campañas"}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 font-bold text-ok">
+                                <Icon name="check" className="size-4" />
+                                Sin campañas
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            {vehicle && (
+                              <button
+                                onClick={() => onOpen(vehicle)}
+                                className="min-h-11 cursor-pointer px-2 font-bold underline underline-offset-4"
+                              >
+                                {risk ? "Ver y dar turno" : "Ver informe"}
+                                <span className="sr-only"> de {input}</span>
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={exportCsv}
+                  className="flex min-h-12 cursor-pointer items-center gap-2 rounded-lg bg-ink px-5 font-bold text-white"
+                >
+                  <Icon name="download" className="size-5" />
+                  Exportar CSV
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      <section aria-labelledby="pro-appointments" className="flex flex-col gap-4">
+        <h2 id="pro-appointments" className="font-display text-4xl font-extrabold">
+          Próximos turnos de reparación
+        </h2>
+        {!isLoggedIn ? (
+          <p className="text-lg text-muted">
+            <button onClick={() => onNav("my-appointments")} className="min-h-11 cursor-pointer font-bold text-ink underline underline-offset-4">
+              Ingresá
+            </button>{" "}
+            para ver los turnos de tu cuenta.
+          </p>
+        ) : upcoming.length === 0 ? (
+          <p className="text-lg text-muted">No hay turnos programados.</p>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-3">
+            {upcoming.map((appointment) => (
+              <div key={appointment.id} className="flex flex-col gap-1.5 rounded-lg border-2 border-ink bg-white p-5">
+                <p className="font-display text-3xl font-extrabold">
+                  {formatAppointmentDate(appointment.date, true)} · {appointment.time}
+                </p>
+                <p className="font-mono font-bold">{appointment.plate}</p>
+                <p className="text-base text-muted">{appointment.vehicle}</p>
+                <p className="text-base text-muted">{dealerFor(appointment.dealerId)?.name}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </main>
   )
@@ -2779,7 +3346,7 @@ function LoginScreen({
           ))}
         </div>
       </section>
-      <section className="rounded-2xl border border-border bg-white p-6 shadow-lg shadow-navy/5 sm:p-8">
+      <section className="rounded-2xl border-2 border-ink bg-white p-6 shadow-lg shadow-navy/5 sm:p-8">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="font-display text-2xl font-bold text-navy">
@@ -2840,7 +3407,7 @@ function LoginScreen({
           )}
           <button
             type="submit"
-            className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red py-3.5 text-base font-bold text-white hover:bg-red/90"
+            className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-[3px] border-ink bg-signal py-3.5 text-base font-bold text-ink hover:bg-risk-mid"
           >
             <Icon name="user" className="size-4" />
             Ingresar
@@ -2882,35 +3449,34 @@ function BackButton({
 
 function Footer({ onNav }: { onNav: (screen: Screen) => void }) {
   return (
-    <footer className="mt-12 border-t border-border bg-white">
+    <footer className="on-dark mt-12 bg-ink text-line print:hidden">
+      <Hazard />
       <div className="mx-auto flex max-w-6xl flex-col justify-between gap-5 px-5 py-8 sm:flex-row sm:items-center">
         <div>
-          <p className="font-display font-bold text-navy">
-            Avis<span className="text-red">AR</span>
+          <p className="text-white">
+            <Logo small />
           </p>
-          <p className="mt-1 text-sm text-muted">
-            Prototipo educativo de seguridad vehicular.
+          <p className="mt-1 text-base">
+            Prototipo educativo de seguridad vehicular. Campañas ficticias.
           </p>
         </div>
-        <div className="flex flex-wrap gap-5 text-sm font-semibold text-muted">
-          <button
-            onClick={() => onNav("home")}
-            className="cursor-pointer hover:text-navy"
-          >
-            Consultar
-          </button>
-          <button
-            onClick={() => onNav("education")}
-            className="cursor-pointer hover:text-navy"
-          >
-            Guía de recalls
-          </button>
-          <button
-            onClick={() => onNav("my-alerts")}
-            className="cursor-pointer hover:text-navy"
-          >
-            Mis alertas
-          </button>
+        <div className="flex flex-wrap gap-2 text-base font-semibold">
+          {(
+            [
+              ["Consultar", "home"],
+              ["Guía de recalls", "education"],
+              ["Mis alertas", "my-alerts"],
+              ["Concesionarios y talleres", "pro"],
+            ] as [string, Screen][]
+          ).map(([label, target]) => (
+            <button
+              key={target}
+              onClick={() => onNav(target)}
+              className="min-h-11 cursor-pointer px-2 text-white underline underline-offset-4"
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
     </footer>
@@ -3106,7 +3672,10 @@ export default function App() {
   }
 
   return (
-    <div className="flex min-h-full flex-col bg-bg text-navy">
+    <div className="flex min-h-full flex-col bg-bg text-ink">
+      <a href="#contenido" className="skip-link">
+        Saltar al contenido
+      </a>
       <NavBar
         screen={screen}
         onNav={navigate}
@@ -3129,7 +3698,15 @@ export default function App() {
           if (protectedScreens.includes(screen)) setScreen("home")
         }}
       />
-      <div className="flex-1">
+      <div id="contenido" tabIndex={-1} className="flex-1 outline-none">
+        {screen === "pro" && (
+          <ProScreen
+            onOpen={(vehicle) => showResults(vehicle)}
+            onNav={navigate}
+            appointments={appointments}
+            isLoggedIn={Boolean(user)}
+          />
+        )}
         {screen === "login" && (
           <LoginScreen
             onLogin={(loggedUser) => {

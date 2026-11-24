@@ -57,11 +57,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-button,
-input,
-select,
-textarea {
-  font: inherit;
+@layer base {
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
 }
 
 /* Títulos de cartel vial */
