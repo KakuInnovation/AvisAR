@@ -15,6 +15,7 @@ import {
   lightFor,
   useIntroOnce,
 } from "./motion"
+import { BenefitsBento, CommonFaults, Eyebrow, FaqSection, FinalCta, HeroPreview, ProBand } from "./home-sections"
 import {
   CAMPAIGNS,
   CATALOG,
@@ -693,6 +694,7 @@ function HomeScreen({
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...SPRING_POP, delay: 0.7, opacity: { delay: 0.7, duration: 0.25 } }}
           >
+            <HeroPreview play={intro} />
           <form
             onSubmit={(event) => {
               event.preventDefault()
@@ -983,10 +985,15 @@ function HomeScreen({
         </div>
       </section>
 
+      <BenefitsBento />
+
       <ScrollStory />
 
-      <section className="mx-auto max-w-6xl px-5 py-16">
-        <h2 className="font-display text-5xl font-extrabold">Buscá por marca y modelo</h2>
+      <CommonFaults />
+
+      <section className="mx-auto max-w-6xl px-5 py-16 lg:py-28">
+        <Eyebrow>Sin la patente a mano</Eyebrow>
+        <h2 className="font-display text-[44px] font-extrabold leading-[0.95] sm:text-6xl">Buscá por tipo de vehículo</h2>
         <p className="mt-3 max-w-2xl text-lg text-muted">
           ¿No tenés la patente a mano? Elegí el tipo de vehículo y completá marca, modelo y año.
         </p>
@@ -1022,6 +1029,12 @@ function HomeScreen({
           ))}
         </div>
       </section>
+
+      <ProBand onPro={() => onNav("pro")} />
+
+      <FaqSection />
+
+      <FinalCta />
 
       {isLoggedIn && (
         <section className="mx-auto max-w-6xl px-5 py-12">
