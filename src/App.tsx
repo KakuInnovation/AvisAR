@@ -1,4 +1,22 @@
 import { useEffect, useRef, useState } from "react"
+import { AnimatePresence, motion, useAnimate, useReducedMotion } from "motion/react"
+import {
+  CountUp,
+  DrawCheck,
+  EASE_OUT,
+  HeroCar,
+  HeroRoad,
+  InView,
+  LightCluster,
+  LightIcon,
+  PrintIn,
+  Rise,
+  ScrollStory,
+  SPRING_POP,
+  WordReveal,
+  lightFor,
+  useIntroOnce,
+} from "./motion"
 import {
   CAMPAIGNS,
   CATALOG,
@@ -75,10 +93,12 @@ function CarSilhouette({
   type,
   className = "h-16 w-40",
   label,
+  dark = false,
 }: {
   type: BodyType
   className?: string
   label?: string
+  dark?: boolean
 }) {
   const body: Record<BodyType, { d: string; wheels: [number, number]; r: number; w: number }> = {
     sedan: { d: "M10 60V47q2-7 14-9l32-4 22-16q6-4 18-4h32q10 0 18 8l14 12 22 4q10 2 10 10v12z", wheels: [50, 152], r: 13, w: 200 },
@@ -95,7 +115,7 @@ function CarSilhouette({
     >
       <path fill="currentColor" d={shape.d} />
       {shape.wheels.map((cx) => (
-        <circle key={cx} cx={cx} cy="61" r={shape.r} fill="currentColor" stroke="#FFFFFF" strokeWidth="4" />
+        <circle key={cx} cx={cx} cy="61" r={shape.r} fill={dark ? "#111214" : "currentColor"} stroke={dark ? "currentColor" : "#FFFFFF"} strokeWidth="4" />
       ))}
     </svg>
   )
@@ -502,6 +522,19 @@ function HomeScreen({
   const [error, setError] = useState("")
   const [notFound, setNotFound] = useState(false)
   const [loading, setLoading] = useState(false)
+  const intro = useIntroOnce("avisar-intro")
+  const reduce = useReducedMotion()
+  const touched = useRef(false)
+  useEffect(() => {
+    if (!intro) return
+    const timer = window.setTimeout(() => {
+      const desktop = window.matchMedia("(pointer: fine)").matches
+      if (desktop && !touched.current && (document.activeElement === document.body || !document.activeElement)) {
+        document.getElementById("plate-input")?.focus({ preventScroll: true })
+      }
+    }, 900)
+    return () => window.clearTimeout(timer)
+  }, [intro])
 
   const clear = () => {
     setPlate("")
@@ -576,34 +609,60 @@ function HomeScreen({
     "w-full rounded-lg bg-white px-3 py-3 text-base outline-none disabled:cursor-not-allowed disabled:bg-bg disabled:text-muted"
 
   return (
-    <main>
-      <section>
-        <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 py-12 lg:grid-cols-[1.05fr_.95fr] lg:py-16">
+    <main
+      onPointerDownCapture={() => (touched.current = true)}
+      onKeyDownCapture={() => (touched.current = true)}
+    >
+      <section className="on-dark relative flex min-h-[calc(100svh-80px)] flex-col lg:min-h-[calc(100svh-124px)] overflow-hidden bg-ink text-white">
+        <div className="relative z-10 mx-auto grid w-full max-w-6xl flex-1 items-center gap-6 px-4 pb-4 pt-6 sm:px-5 lg:grid-cols-[1.05fr_.95fr] lg:gap-12 lg:pb-2 lg:pt-8">
           <div>
-            <p className="mb-5 inline-flex items-center gap-2 rounded bg-ink px-3 py-2 text-sm font-bold uppercase tracking-[0.1em] text-signal">
+            <motion.p
+              className="mb-4 inline-flex items-center gap-2 rounded bg-signal px-3 py-1.5 text-sm font-bold uppercase tracking-[0.1em] text-ink lg:mb-6"
+              initial={intro ? (reduce ? { opacity: 0 } : { opacity: 0, y: 8 }) : false}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.3, ease: EASE_OUT }}
+            >
               <Icon name="alert" className="size-4" />
               Antes de comprar un usado
-            </p>
-            <h1 className="font-display text-[56px] font-extrabold leading-[0.92] sm:text-7xl lg:text-[88px]">
-              ¿Ese auto tiene un recall sin reparar?
+            </motion.p>
+            <h1 className="font-display text-[44px] font-extrabold leading-[0.92] sm:text-7xl lg:text-[76px]">
+              <WordReveal text="¿Ese auto tiene un recall sin reparar?" play={intro} delay={0.38} />
             </h1>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted sm:text-xl">
+            <motion.p
+              className="mt-5 hidden max-w-xl text-lg leading-relaxed text-line sm:block"
+              initial={intro ? { opacity: 0 } : false}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.3, ease: EASE_OUT }}
+            >
               Ingresá la patente y en segundos sabés si el fabricante llamó a
               revisión ese modelo, qué riesgo implica y cómo repararlo gratis.
               Te llevás un informe para compartir con el vendedor.
-            </p>
+            </motion.p>
           </div>
 
+          <motion.div
+            className="relative text-ink"
+            initial={intro ? (reduce ? { opacity: 0 } : { opacity: 0, y: 40 }) : false}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...SPRING_POP, delay: 0.7, opacity: { delay: 0.7, duration: 0.25 } }}
+          >
+            <motion.div
+              aria-hidden="true"
+              className="absolute inset-0 rounded-xl bg-signal"
+              initial={intro && !reduce ? { x: 0, y: 0 } : false}
+              animate={{ x: 10, y: 10 }}
+              transition={{ delay: 1.15, duration: 0.3, ease: EASE_OUT }}
+            />
           <form
             onSubmit={(event) => {
               event.preventDefault()
               submit()
             }}
-            className="card-signal rounded-xl bg-surface p-5 sm:p-7"
+            className="relative rounded-xl border-[3px] border-ink bg-surface p-4 sm:p-7"
             aria-labelledby="search-title"
           >
             <div className="flex items-start justify-between gap-3">
-              <h2 id="search-title" className="font-display text-3xl font-extrabold">
+              <h2 id="search-title" className="font-display text-[28px] font-extrabold sm:text-3xl">
                 Consultá un vehículo
               </h2>
               <button
@@ -618,7 +677,7 @@ function HomeScreen({
             <div
               role="tablist"
               aria-label="Tipo de búsqueda"
-              className="relative mt-5 grid grid-cols-3 overflow-hidden rounded-md border-2 border-ink bg-white"
+              className="relative mt-4 grid grid-cols-3 overflow-hidden rounded-md border-2 border-ink bg-white sm:mt-5"
             >
               <span
                 aria-hidden="true"
@@ -645,13 +704,29 @@ function HomeScreen({
               ))}
             </div>
 
-            <div id="search-panel" role="tabpanel" aria-labelledby={`tab-${mode}`} className="mt-5 min-h-36">
+            <div id="search-panel" role="tabpanel" aria-labelledby={`tab-${mode}`} className="relative mt-4 min-h-36 sm:mt-5">
+              {loading && (
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-lg bg-ink text-white"
+                >
+                  {!reduce && (
+                    <LightCluster
+                      mode="sweep"
+                      label="Testigos"
+                      kinds={["engine", "brake", "airbag", "battery", "warning"]}
+                    />
+                  )}
+                  <p className="font-display text-2xl font-extrabold">Consultando fuentes…</p>
+                </div>
+              )}
               <div key={mode} className="pop-in">
               {mode === "plate" && (
                 <div>
                   <label htmlFor="plate-input" className="mb-2 block text-base font-bold">
                     Patente del vehículo
                   </label>
+                  <motion.div layoutId="plate">
                   <PlateFrame>
                     <input
                       id="plate-input"
@@ -670,6 +745,7 @@ function HomeScreen({
                       aria-describedby="plate-help"
                     />
                   </PlateFrame>
+                  </motion.div>
                   <p id="plate-help" className="mt-2 text-sm text-muted sm:text-base">
                     Formato Mercosur (AB 123 CD) o anterior (ABC 123).
                   </p>
@@ -813,19 +889,10 @@ function HomeScreen({
               <button
                 type="submit"
                 disabled={loading}
-                className="flex min-h-14 flex-[1_1_220px] cursor-pointer items-center justify-center gap-2 rounded-lg border-[3px] border-ink bg-signal font-display text-[28px] font-extrabold text-ink disabled:cursor-wait disabled:opacity-80"
+                className="flex min-h-14 flex-[1_1_150px] cursor-pointer items-center justify-center gap-2 rounded-lg border-[3px] border-ink bg-signal font-display text-[28px] font-extrabold text-ink disabled:cursor-wait"
               >
-                {loading ? (
-                  <>
-                    <span className="size-5 animate-spin rounded-full border-[3px] border-ink/30 border-t-ink" aria-hidden="true" />
-                    Consultando…
-                  </>
-                ) : (
-                  <>
-                    <Icon name="search" className="size-6" />
-                    Consultar
-                  </>
-                )}
+                <Icon name="search" className="size-6" />
+                Consultar
               </button>
               <button
                 type="button"
@@ -833,68 +900,78 @@ function HomeScreen({
                 className="flex min-h-14 flex-[0_1_auto] cursor-pointer items-center gap-2 rounded-lg border-[3px] border-ink bg-white px-5 text-base font-bold"
               >
                 <Icon name="camera" className="size-5" />
-                Escanear cédula
+                <span>
+                  Escanear<span className="hidden sm:inline"> cédula</span>
+                </span>
               </button>
             </div>
             <p className="sr-only" aria-live="polite">
-              {loading ? "Consultando campañas…" : ""}
+              {loading ? "Consultando fuentes…" : ""}
             </p>
           </form>
+          </motion.div>
+        </div>
+        <div className="relative h-[150px] shrink-0 sm:h-[190px] lg:h-[220px]">
+          <HeroRoad play={intro} />
+          <div className="absolute bottom-[12%] left-1/2 w-[min(400px,72vw)] -translate-x-1/2 lg:left-[28%]">
+            <HeroCar play={intro} />
+          </div>
         </div>
       </section>
 
-      <section aria-label="Datos de AvisAR" className="bg-ink text-white">
-        <div className="mx-auto grid max-w-6xl gap-6 px-5 py-7 sm:grid-cols-3">
-          {[
-            [String(CATALOG.length), "modelos del parque real"],
-            [String(CAMPAIGNS.length), "campañas de demostración"],
-            ["$0", "la consulta y la reparación"],
-          ].map(([number, label]) => (
+      <section aria-label="Datos de AvisAR" className="border-t-4 border-signal bg-ink text-white">
+        <div className="mx-auto grid max-w-6xl gap-6 px-5 py-8 sm:grid-cols-3">
+          {([
+            [CATALOG.length, "", "modelos del parque real"],
+            [CAMPAIGNS.length, "", "campañas de demostración"],
+            [0, "$", "la consulta y la reparación"],
+          ] as const).map(([number, prefix, label]) => (
             <div key={label}>
-              <p className="font-display text-5xl font-extrabold text-signal">{number}</p>
+              <p className="font-display text-6xl font-extrabold text-signal">
+                <CountUp value={number} prefix={prefix} />
+              </p>
               <p className="mt-1 text-base text-line">{label}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-14">
-        <h2 className="font-display text-5xl font-extrabold">Cómo funciona</h2>
-        <ol className="mt-7 grid gap-5 md:grid-cols-3">
-          {[
-            ["Ingresás la patente", "O el VIN que figura en la cédula y en el parabrisas."],
-            ["Ves el estado del auto", "Campañas pendientes o reparadas, con el riesgo explicado sin tecnicismos."],
-            ["Compartís el informe", "Por WhatsApp o en PDF, para negociar con datos o pedir la reparación antes de cerrar."],
-          ].map(([title, text], index) => (
-            <li key={title} className="flex flex-col gap-3 rounded-lg border-2 border-ink bg-white p-6">
-              <Diamond>{index + 1}</Diamond>
-              <h3 className="mt-2 text-xl font-bold">{title}</h3>
-              <p className="text-base leading-relaxed text-muted">{text}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
+      <ScrollStory />
 
-      <section className="mx-auto max-w-6xl px-5 pb-14">
+      <section className="mx-auto max-w-6xl px-5 py-16">
         <h2 className="font-display text-5xl font-extrabold">Buscá por marca y modelo</h2>
         <p className="mt-3 max-w-2xl text-lg text-muted">
           ¿No tenés la patente a mano? Elegí el tipo de vehículo y completá marca, modelo y año.
         </p>
         <div className="mt-7 grid grid-cols-2 gap-4 md:grid-cols-4">
-          {(["sedan", "suv", "pickup", "hatch"] as BodyType[]).map((type) => (
-            <button
-              key={type}
-              type="button"
-              onClick={() => {
-                selectTab("data")
-                document.getElementById("search-title")?.scrollIntoView({ behavior: "smooth", block: "center" })
-                window.setTimeout(() => document.getElementById("tab-data")?.focus(), 300)
-              }}
-              className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-ink bg-white p-5 text-ink transition hover:bg-signal"
-            >
-              <CarSilhouette type={type} className="h-16 w-full max-w-44" />
-              <span className="text-lg font-bold">{BODY_LABEL[type]}</span>
-            </button>
+          {(["sedan", "suv", "pickup", "hatch"] as BodyType[]).map((type, index) => (
+            <InView key={type} delay={index * 0.05} y={24} className="relative">
+              <span aria-hidden="true" className="absolute inset-0 rounded-lg bg-signal" />
+              <motion.button
+                type="button"
+                initial="rest"
+                animate="rest"
+                whileHover={reduce ? undefined : "hover"}
+                whileTap={reduce ? undefined : { scale: 0.97 }}
+                variants={{ rest: { x: 0, y: 0 }, hover: { x: -6, y: -6 } }}
+                transition={{ duration: 0.2, ease: EASE_OUT }}
+                onClick={() => {
+                  selectTab("data")
+                  document.getElementById("search-title")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" })
+                  window.setTimeout(() => document.getElementById("tab-data")?.focus({ preventScroll: true }), 400)
+                }}
+                className="relative flex w-full cursor-pointer flex-col items-center gap-2 rounded-lg border-[3px] border-ink bg-white p-5 text-ink"
+              >
+                <motion.span
+                  className="block w-full max-w-44"
+                  variants={{ rest: { x: 0 }, hover: { x: 8 } }}
+                  transition={{ duration: 0.25, ease: EASE_OUT }}
+                >
+                  <CarSilhouette type={type} className="h-16 w-full" />
+                </motion.span>
+                <span className="text-lg font-bold">{BODY_LABEL[type]}</span>
+              </motion.button>
+            </InView>
           ))}
         </div>
       </section>
@@ -1069,27 +1146,33 @@ function reportText(vehicle: AppVehicle) {
 
 function ShareReport({ vehicle }: { vehicle: AppVehicle }) {
   const [copied, setCopied] = useState("")
+  const [card, animateCard] = useAnimate()
+  const reduce = useReducedMotion()
+  const pulse = () => {
+    if (!reduce && card.current) animateCard(card.current, { scale: [1, 1.02, 1] }, { duration: 0.32, ease: EASE_OUT })
+  }
+  const confirm = (message: string) => {
+    setCopied(message)
+    window.setTimeout(() => setCopied(""), 3000)
+  }
   const pending = vehicle.recalls.length
   const critical = vehicle.recalls.filter((recall) => recall.risk === "CRÍTICO").length
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(reportText(vehicle))
-      setCopied("Resumen copiado al portapapeles.")
+      pulse()
+      confirm("Resumen copiado al portapapeles.")
     } catch {
-      setCopied("No se pudo copiar. Seleccioná el texto del informe manualmente.")
+      confirm("No se pudo copiar. Seleccioná el texto del informe manualmente.")
     }
-    window.setTimeout(() => setCopied(""), 3000)
   }
   return (
-    <aside
-      aria-labelledby="report-title"
-      className="reveal flex flex-col gap-4"
-      style={{ "--delay": "200ms" } as React.CSSProperties}
-    >
+    <aside aria-labelledby="report-title" className="flex flex-col gap-4">
       <h2 id="report-title" className="font-display text-4xl font-extrabold">
         Informe para compartir
       </h2>
-      <div className="card-signal overflow-hidden rounded-xl bg-white">
+      <PrintIn delay={0.55}>
+      <div ref={card} className="card-signal overflow-hidden rounded-xl bg-white">
         <div className="flex items-center justify-between gap-3 bg-ink px-5 py-3 text-white">
           <span className="font-display text-2xl font-extrabold">
             AVIS<span className="ml-0.5 bg-signal px-1 text-ink">AR</span> · Informe
@@ -1115,11 +1198,16 @@ function ShareReport({ vehicle }: { vehicle: AppVehicle }) {
           </p>
         </div>
       </div>
+      </PrintIn>
       <div className="flex flex-col gap-3 print:hidden">
         <a
           href={`https://wa.me/?text=${encodeURIComponent(reportText(vehicle))}`}
           target="_blank"
           rel="noreferrer"
+          onClick={() => {
+            pulse()
+            confirm("Informe listo para enviar por WhatsApp.")
+          }}
           className="flex min-h-14 items-center justify-center gap-2 rounded-lg bg-ink text-base font-bold text-white"
         >
           <Icon name="share" className="size-5" />
@@ -1145,7 +1233,7 @@ function ShareReport({ vehicle }: { vehicle: AppVehicle }) {
         <p role="status" aria-live="polite" className="min-h-6 text-base font-semibold text-ok">
           {copied && (
             <span key={copied} className="pop-in inline-flex items-center gap-2">
-              <Icon name="check" className="size-5" />
+              {copied.startsWith("No se") ? <Icon name="alert" className="size-5" /> : <DrawCheck className="size-5" />}
               {copied}
             </span>
           )}
@@ -1180,31 +1268,54 @@ function ResultsScreen({
   )
   const count = vehicle.recalls.length
   const body = bodyTypeOf(vehicle.model)
+  const reduce = useReducedMotion()
+  const activeLights = [...new Set(vehicle.recalls.map((recall) => lightFor(recall.component)))]
+  const statusTone =
+    count === 0
+      ? "border-[3px] border-ok bg-ok-light text-ink"
+      : hasCritical
+        ? "bg-risk-high text-white"
+        : "border-[3px] border-ink bg-risk-mid text-ink"
   return (
-    <main className="mx-auto max-w-6xl px-5 py-10">
-      <div className="print:hidden">
-        <BackButton label="Nueva consulta" onClick={() => onNav("home")} />
-      </div>
-      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-10 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="flex min-w-0 flex-col gap-6">
-          <section
-            aria-labelledby="vehicle-title"
-            className="reveal flex flex-wrap items-center gap-6 rounded-xl border-2 border-ink bg-white p-6"
-            style={{ "--rise": "12px" } as React.CSSProperties}
-          >
-            <span className="reveal-x shrink-0" style={{ "--delay": "60ms" } as React.CSSProperties}>
-              <CarSilhouette type={body} className="h-20 w-52 text-ink" label={`Silueta de ${BODY_LABEL[body]}`} />
-            </span>
-            <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-2">
-              <PlateFrame small>
-                <p className="px-4 py-1 text-center font-mono text-2xl font-bold tracking-[0.12em]">
-                  {vehicle.plate}
-                </p>
-              </PlateFrame>
-              <h1 id="vehicle-title" className="mt-1 font-display text-4xl font-extrabold sm:text-5xl">
+    <main>
+      <motion.section
+        aria-labelledby="vehicle-title"
+        className="on-dark relative bg-ink text-white"
+        initial={reduce ? { opacity: 0 } : { clipPath: "inset(0 0 100% 0)" }}
+        animate={reduce ? { opacity: 1 } : { clipPath: "inset(0 0 0% 0)" }}
+        transition={{ duration: reduce ? 0.2 : 0.22, ease: EASE_OUT }}
+      >
+        <div className="mx-auto max-w-6xl px-5 pb-8 pt-6">
+          <div className="print:hidden">
+            <button
+              onClick={() => onNav("home")}
+              className="mb-6 flex min-h-11 cursor-pointer items-center gap-2 text-base font-semibold text-line hover:text-white"
+            >
+              <Icon name="arrow" className="size-4 rotate-180" />
+              Nueva consulta
+            </button>
+          </div>
+          <div className="grid grid-cols-[minmax(0,1fr)] items-center gap-6 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-10">
+            <motion.span
+              className="hidden shrink-0 text-[#F3F2EE] sm:block"
+              initial={reduce ? { opacity: 0 } : { x: -80, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={reduce ? { duration: 0.2 } : { type: "spring", duration: 0.5, bounce: 0.1, delay: 0.12, opacity: { duration: 0.15, delay: 0.12 } }}
+            >
+              <CarSilhouette type={body} dark className="h-24 w-60" label={`Silueta de ${BODY_LABEL[body]}`} />
+            </motion.span>
+            <div className="flex min-w-0 flex-col items-start gap-3">
+              <motion.div layoutId="plate" className="text-ink">
+                <PlateFrame small>
+                  <p className="px-4 py-1 text-center font-mono text-2xl font-bold tracking-[0.12em] sm:text-3xl">
+                    {vehicle.plate}
+                  </p>
+                </PlateFrame>
+              </motion.div>
+              <h1 id="vehicle-title" className="font-display text-5xl font-extrabold leading-[0.95] sm:text-6xl">
                 {vehicle.brand} {vehicle.model} {vehicle.year}
               </h1>
-              <p className="text-base text-muted">
+              <p className="text-base text-line">
                 {BODY_LABEL[body]} · {vehicle.version}
                 {vehicle.vin && (
                   <>
@@ -1213,33 +1324,45 @@ function ResultsScreen({
                 )}
               </p>
             </div>
-          </section>
+            <div>
+              <p className="mb-2 text-sm font-bold uppercase tracking-[0.1em] text-line">Testigos del tablero</p>
+              <LightCluster
+                mode="result"
+                active={activeLights}
+                ok={count === 0}
+                delay={0.2}
+                label="Sistemas afectados por campañas"
+              />
+            </div>
+          </div>
+        </div>
+        <Hazard />
+      </motion.section>
 
-          <section
+      <div className="mx-auto max-w-6xl px-5 py-8">
+          <Rise
+            as="section"
+            delay={0.42}
+            y={8}
+            duration={0.22}
             role={count > 0 ? "alert" : "status"}
-            style={{ "--delay": "80ms" } as React.CSSProperties}
-            className={`reveal flex flex-wrap items-center gap-5 rounded-xl p-6 sm:p-7 ${hasCritical ? "alert-ring" : ""} ${
-              count === 0
-                ? "border-2 border-ok bg-ok-light text-ink"
-                : hasCritical
-                  ? "bg-risk-high text-white"
-                  : "border-[3px] border-ink bg-risk-mid text-ink"
-            }`}
+            style={{ "--delay": "420ms" } as React.CSSProperties}
+            className={`flex flex-wrap items-center gap-5 rounded-xl p-6 sm:p-8 ${hasCritical ? "alert-ring" : ""} ${statusTone}`}
           >
             <span
-              className={`flex size-16 shrink-0 items-center justify-center rounded-full ${
+              className={`flex size-20 shrink-0 items-center justify-center rounded-full ${
                 count === 0 ? "bg-ok text-white" : hasCritical ? "bg-white text-risk-high" : "bg-ink text-risk-mid"
               }`}
             >
-              <Icon name={count === 0 ? "check" : "alert"} className="size-9" />
+              <Icon name={count === 0 ? "check" : "alert"} className="size-11" />
             </span>
             <div className="flex-[1_1_320px]">
-              <p className="font-display text-4xl font-extrabold">
+              <p className="font-display text-5xl font-extrabold leading-none sm:text-6xl">
                 {count === 0
                   ? "Sin campañas pendientes"
                   : `${count} ${count === 1 ? "campaña pendiente" : "campañas pendientes"}${hasCritical ? " · riesgo crítico" : ""}`}
               </p>
-              <p className="mt-2 max-w-2xl text-lg leading-relaxed">
+              <p className="mt-3 max-w-2xl text-lg leading-relaxed">
                 {count === 0
                   ? "No encontramos campañas de seguridad para este vehículo. Activá una alerta y te avisamos si aparece una nueva."
                   : hasCritical
@@ -1247,8 +1370,10 @@ function ResultsScreen({
                     : "Reparalo pronto. Las reparaciones de recall son gratuitas en concesionarios oficiales."}
               </p>
             </div>
-          </section>
+          </Rise>
 
+      <div className="mt-8 grid grid-cols-[minmax(0,1fr)] items-start gap-10 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="flex min-w-0 flex-col gap-6">
           <DemoNotice />
 
           {count === 0 ? (
@@ -1299,16 +1424,25 @@ function ResultsScreen({
               </div>
               <div className="mt-5 space-y-4">
                 {visible.map((recall, index) => (
-                  <article
+                  <Rise
+                    as="article"
                     key={`${filter}-${recall.id}`}
-                    style={{ "--delay": `${160 + Math.min(index, 6) * 40}ms` } as React.CSSProperties}
-                    className={`reveal rounded-lg border-2 bg-white p-5 sm:p-6 ${
+                    delay={0.5 + Math.min(index, 5) * 0.05}
+                    className={`rounded-xl border-[3px] bg-white p-5 sm:p-6 ${
                       recall.risk === "CRÍTICO" ? "border-risk-high" : "border-ink"
                     }`}
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span
+                        className={`flex size-12 shrink-0 items-center justify-center rounded-lg bg-ink ${
+                          recall.risk === "CRÍTICO" ? "text-[#FF5A4E]" : "text-risk-mid"
+                        }`}
+                        aria-hidden="true"
+                      >
+                        <LightIcon kind={lightFor(recall.component)} />
+                      </span>
                       <Badge risk={recall.risk} />
-                      <span className="font-mono text-sm text-muted">{recall.campaign}</span>
+                      <span className="ml-auto font-mono text-sm text-muted">{recall.campaign}</span>
                     </div>
                     <h3 className="mt-3 text-2xl font-bold">{recall.title}</h3>
                     <p className="mt-1 text-base font-semibold text-graphite">
@@ -1333,7 +1467,7 @@ function ResultsScreen({
                         <Icon name="arrow" className="size-4" />
                       </button>
                     </div>
-                  </article>
+                  </Rise>
                 ))}
               </div>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row print:hidden">
@@ -1355,6 +1489,7 @@ function ResultsScreen({
           )}
         </div>
         <ShareReport vehicle={vehicle} />
+      </div>
       </div>
     </main>
   )
@@ -3021,6 +3156,9 @@ function ProScreen({
   const [text, setText] = useState("AB 123 CD\nAD 456 EF\nAA 000 AA")
   const [rows, setRows] = useState<BulkRow[] | null>(null)
   const [error, setError] = useState("")
+  const [processing, setProcessing] = useState(0)
+  const [runId, setRunId] = useState(0)
+  const reduce = useReducedMotion()
   const lines = text
     .split(/\r?\n/)
     .map((line) => line.trim().toUpperCase())
@@ -3033,16 +3171,22 @@ function ProScreen({
       setError("Pegá al menos una patente o un VIN.")
       return
     }
+    if (processing) return
     setError("")
-    setRows(
-      lines.map((input) => {
-        const compact = input.replace(/[\s-]/g, "")
-        const vehicle = isValidVin(compact)
-          ? findVehicle({ mode: "vin", vin: compact })
-          : findVehicle({ mode: "plate", plate: input })
-        return { input, vehicle }
-      }),
-    )
+    const result = lines.map((input) => {
+      const compact = input.replace(/[\s-]/g, "")
+      const vehicle = isValidVin(compact)
+        ? findVehicle({ mode: "vin", vin: compact })
+        : findVehicle({ mode: "plate", plate: input })
+      return { input, vehicle }
+    })
+    const duration = Math.min(1400, 400 + lines.length * 120)
+    setProcessing(duration)
+    window.setTimeout(() => {
+      setProcessing(0)
+      setRows(result)
+      setRunId((id) => id + 1)
+    }, duration)
   }
 
   const loadCsv = (file: File) => {
@@ -3114,6 +3258,9 @@ function ProScreen({
           <p id="bulk-help" className="text-base text-muted">
             {lines.length} {lines.length === 1 ? "unidad" : "unidades"} · hasta 200 por consulta.
           </p>
+          <p className="sr-only" aria-live="polite">
+            {processing ? `Consultando ${lines.length} unidades…` : ""}
+          </p>
           {error && (
             <p role="alert" className="flex items-center gap-2 text-base font-bold text-risk-high">
               <Icon name="alert" className="size-5" />
@@ -3123,9 +3270,21 @@ function ProScreen({
           <div className="flex flex-wrap gap-3">
             <button
               type="submit"
-              className="min-h-14 flex-[1_1_200px] cursor-pointer rounded-lg border-[3px] border-ink bg-signal font-display text-[26px] font-extrabold"
+              aria-disabled={processing > 0}
+              className="relative min-h-14 flex-[1_1_200px] cursor-pointer overflow-hidden rounded-lg border-[3px] border-ink bg-white font-display text-[26px] font-extrabold aria-disabled:cursor-wait"
             >
-              Consultar {lines.length} {lines.length === 1 ? "unidad" : "unidades"}
+              <motion.span
+                aria-hidden="true"
+                className="absolute inset-0 origin-left bg-signal"
+                initial={false}
+                animate={{ scaleX: processing ? [0, 1] : 1 }}
+                transition={processing ? { duration: processing / 1000, ease: "linear" } : { duration: 0 }}
+              />
+              <span className="relative">
+                {processing
+                  ? `Consultando ${lines.length} ${lines.length === 1 ? "unidad" : "unidades"}…`
+                  : `Consultar ${lines.length} ${lines.length === 1 ? "unidad" : "unidades"}`}
+              </span>
             </button>
             <label className="flex min-h-14 cursor-pointer items-center gap-2 rounded-lg border-[3px] border-ink bg-white px-4 text-base font-bold focus-within:outline-[3px] focus-within:outline-offset-2 focus-within:outline-ink">
               <Icon name="upload" className="size-5" />
@@ -3157,15 +3316,15 @@ function ProScreen({
               <div className="flex flex-wrap gap-3" role="status" aria-live="polite">
                 <span className="inline-flex min-h-11 items-center gap-2 rounded bg-risk-high px-3 text-base font-bold text-white">
                   <Icon name="alert" className="size-5" />
-                  {counts.high} riesgo crítico
+                  <CountUp key={`counts.high-${runId}`} value={counts.high} /> riesgo crítico
                 </span>
                 <span className="inline-flex min-h-11 items-center gap-2 rounded border-2 border-ink bg-risk-mid px-3 text-base font-bold text-ink">
                   <Icon name="wrench" className="size-5" />
-                  {counts.mid} riesgo alto o medio
+                  <CountUp key={`counts.mid-${runId}`} value={counts.mid} /> riesgo alto o medio
                 </span>
                 <span className="inline-flex min-h-11 items-center gap-2 rounded bg-ok px-3 text-base font-bold text-white">
                   <Icon name="check" className="size-5" />
-                  {counts.ok} sin campañas
+                  <CountUp key={`counts.ok-${runId}`} value={counts.ok} /> sin campañas
                 </span>
                 {counts.missing > 0 && (
                   <span className="inline-flex min-h-11 items-center rounded border-2 border-graphite bg-white px-3 text-base font-bold text-graphite">
@@ -3192,7 +3351,13 @@ function ProScreen({
                     {rows.map(({ input, vehicle }, index) => {
                       const risk = vehicle ? worstRisk(vehicle) : null
                       return (
-                        <tr key={`${input}-${index}`} className="border-t border-line">
+                        <motion.tr
+                          key={`${runId}-${input}-${index}`}
+                          className="border-t border-line"
+                          initial={index < 12 ? (reduce ? { opacity: 0 } : { opacity: 0, y: 12 }) : false}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: Math.min(index, 11) * 0.03, duration: 0.22, ease: EASE_OUT }}
+                        >
                           <td className="px-4 py-3 font-mono font-bold tracking-wide">{input}</td>
                           <td className="px-4 py-3">
                             {vehicle ? `${vehicle.brand} ${vehicle.model} ${vehicle.year} · ${BODY_LABEL[bodyTypeOf(vehicle.model)]}` : "No encontrado en la base demo"}
@@ -3223,7 +3388,7 @@ function ProScreen({
                               </button>
                             )}
                           </td>
-                        </tr>
+                        </motion.tr>
                       )
                     })}
                   </tbody>
@@ -3599,6 +3764,8 @@ export default function App() {
     )
   }
 
+  const reduceMotion = useReducedMotion()
+  const pendingFocus = useRef(false)
   const focusHeading = () =>
     window.requestAnimationFrame(() => {
       const heading = document.querySelector<HTMLElement>("#contenido h1")
@@ -3623,9 +3790,13 @@ export default function App() {
       window.scrollTo({ top: 0 })
       return
     }
+    if (next === screen) {
+      window.scrollTo({ top: 0 })
+      focusHeading()
+      return
+    }
+    pendingFocus.current = true
     setScreen(next)
-    window.scrollTo({ top: 0 })
-    focusHeading()
   }
   const showResults = (vehicle: AppVehicle, save = true) => {
     setCurrentVehicle(vehicle)
@@ -3731,6 +3902,23 @@ export default function App() {
         }}
       />
       <div id="contenido" tabIndex={-1} className="flex-1 outline-none">
+        <AnimatePresence mode="wait" initial={false} onExitComplete={() => window.scrollTo({ top: 0 })}>
+        <motion.div
+          key={screen}
+          variants={{
+            initial: reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 },
+            enter: { opacity: 1, y: 0, transition: { duration: reduceMotion ? 0.2 : 0.26, ease: EASE_OUT } },
+            exit: { opacity: 0, transition: { duration: 0.16, ease: EASE_OUT } },
+          }}
+          initial="initial"
+          animate="enter"
+          exit="exit"
+          onAnimationComplete={(definition) => {
+            if (definition !== "enter" || !pendingFocus.current) return
+            pendingFocus.current = false
+            focusHeading()
+          }}
+        >
         {screen === "pro" && (
           <ProScreen
             onOpen={(vehicle) => showResults(vehicle)}
@@ -3969,6 +4157,8 @@ export default function App() {
         {screen === "education" && (
           <EducationScreen onSearch={() => navigate("home")} />
         )}
+        </motion.div>
+        </AnimatePresence>
       </div>
       <Footer onNav={navigate} />
     </div>
