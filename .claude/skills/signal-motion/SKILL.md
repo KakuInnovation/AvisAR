@@ -15,7 +15,7 @@ Dos errores, el primero es peor:
 1. **Movimiento que suma alarma o ruido**: parpadeos, sacudidas, pulsos en loop sobre un recall crítico.
 2. **Movimiento genérico o tímido**: fade-ins suaves en cada sección, parallax decorativo, desplazamientos de 4px que nadie nota.
 
-Desde la ronda «expresiva» la portada sí puede tener movimiento con presencia (el auto que llega por la ruta, el título palabra por palabra, el scroll narrado), siempre que cuente la metáfora de AvisAR: **un auto detenido con un aviso**.
+Desde la ronda «expresiva» la portada sí puede tener movimiento con presencia (el título palabra por palabra, el buscador con resorte, el scroll narrado). Juan pidió sacar el auto ilustrado de la portada.
 
 ## Reglas duras
 
@@ -53,7 +53,7 @@ Con `prefers-reduced-motion: reduce` se quitan desplazamientos y escalas: queda 
 | --- | --- | --- | --- |
 | Botones | Sí, sutil | Feedback | `scale(0.97)` al presionar, `--dur-press` |
 | Pestañas Patente / VIN / Marca | Solo el indicador | Estado | El fondo negro se desplaza con `transform`, `--dur-quick`, `--ease-in-out` |
-| Intro de la portada | Sí, una vez por sesión | Metáfora | Carriles `scaleY`, auto con resorte y balizas ×2, título palabra por palabra, buscador con resorte; total < 1,6 s |
+| Intro de la portada | Sí, una vez por sesión | Metáfora | Etiqueta, título palabra por palabra y buscador con resorte; total < 1,6 s (sin auto desde el pedido de Juan) |
 | «Cómo funciona» | Sí, ligado al scroll | Explicar | Sticky 260vh en desktop (`useScroll`); en celular, tarjetas `whileInView` una vez |
 | Cifras de la portada y totales de Talleres | Sí, una vez | Énfasis | Cuentan desde 0 en 900ms |
 | Tarjetas de carrocería | Sí, con puntero | Feedback | Suben 6px, aparece la sombra amarilla y la silueta avanza 8px |

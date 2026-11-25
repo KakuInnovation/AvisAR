@@ -4,8 +4,6 @@ import {
   CountUp,
   DrawCheck,
   EASE_OUT,
-  HeroCar,
-  HeroRoad,
   InView,
   LightCluster,
   LightIcon,
@@ -613,8 +611,8 @@ function HomeScreen({
       onPointerDownCapture={() => (touched.current = true)}
       onKeyDownCapture={() => (touched.current = true)}
     >
-      <section className="on-dark relative flex min-h-[calc(100svh-80px)] flex-col lg:min-h-[calc(100svh-124px)] overflow-hidden bg-ink text-white">
-        <div className="relative z-10 mx-auto grid w-full max-w-6xl flex-1 items-center gap-6 px-4 pb-4 pt-6 sm:px-5 lg:grid-cols-[1.05fr_.95fr] lg:gap-12 lg:pb-2 lg:pt-8">
+      <section className="on-dark relative flex flex-col overflow-hidden bg-ink text-white">
+        <div className="relative z-10 mx-auto grid w-full max-w-6xl flex-1 items-center gap-6 px-4 pb-10 pt-6 sm:px-5 lg:grid-cols-[1.05fr_.95fr] lg:gap-12 lg:py-20">
           <div>
             <motion.p
               className="mb-4 inline-flex items-center gap-2 rounded bg-signal px-3 py-1.5 text-sm font-bold uppercase tracking-[0.1em] text-ink lg:mb-6"
@@ -910,12 +908,6 @@ function HomeScreen({
             </p>
           </form>
           </motion.div>
-        </div>
-        <div className="relative h-[150px] shrink-0 sm:h-[190px] lg:h-[220px]">
-          <HeroRoad play={intro} />
-          <div className="absolute bottom-[12%] left-1/2 w-[min(400px,72vw)] -translate-x-1/2 lg:left-[28%]">
-            <HeroCar play={intro} />
-          </div>
         </div>
       </section>
 

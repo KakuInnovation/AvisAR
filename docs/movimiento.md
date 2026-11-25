@@ -19,8 +19,6 @@ Las piezas viven en `src/motion.tsx` y usan `motion/react`.
 
 | Elemento | Propósito | Movimiento | Duración y curva |
 | --- | --- | --- | --- |
-| Portada: carriles de la ruta | Metáfora | `scaleY 0→1` desde abajo, escalonado de 80ms | 600ms, ease-out |
-| Portada: SUV | Metáfora («auto detenido con un aviso») | Entra desde la izquierda con resorte, ruedas que giran y frenan, balizas que se encienden 2 veces a 2 Hz y quedan fijas | resorte 0,9 s, bounce 0,15, delay 200ms |
 | Portada: etiqueta | Jerarquía | `y 8→0` + opacidad | 300ms, delay 300ms |
 | Portada: H1 | Jerarquía | Palabra por palabra desde una máscara (`y 105%→0`), escalonado de 60ms | 450ms, delay 380ms |
 | Portada: buscador | Jerarquía | `y 40→0` con resorte; después la sombra amarilla se corre 10px con `transform` | resorte 0,6 s, bounce 0,2, delay 700ms |
@@ -53,7 +51,7 @@ Todo el revelado del resultado termina antes de los 900ms.
 
 Con `prefers-reduced-motion: reduce` (`useReducedMotion()` en Motion y la media query en CSS):
 
-- No hay intro: el auto, la ruta y el título aparecen en su estado final.
+- No hay intro: el título y el buscador aparecen en su estado final.
 - Las cifras muestran el valor final, sin contar.
 - La carga muestra solo «Consultando fuentes…», sin testigos.
 - Los testigos del resultado aparecen directamente en su estado final.
