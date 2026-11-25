@@ -119,14 +119,40 @@ function CarSilhouette({
   )
 }
 
-function PlateFrame({ children, small = false }: { children: React.ReactNode; small?: boolean }) {
+type PlateKind = "mercosur" | "old"
+
+/** Patente vieja (1995-2016): tres letras y tres números. Si no, Mercosur. */
+function plateKind(raw: string): PlateKind {
+  return /^[A-Z]{3}/.test(raw.replace(/[^A-Z0-9]/gi, "").toUpperCase()) ? "old" : "mercosur"
+}
+
+/** Da formato mientras se escribe: «AB 123 CD» (Mercosur) o «ABC 123» (vieja). */
+function formatPlate(raw: string) {
+  const c = raw.replace(/[^A-Z0-9]/gi, "").toUpperCase()
+  if (/^[A-Z]{3}/.test(c)) return [c.slice(0, 3), c.slice(3, 6)].filter(Boolean).join(" ")
+  return [c.slice(0, 2), c.slice(2, 5), c.slice(5, 7)].filter(Boolean).join(" ")
+}
+
+function PlateFrame({
+  children,
+  small = false,
+  kind = "mercosur",
+}: {
+  children: React.ReactNode
+  small?: boolean
+  kind?: PlateKind
+}) {
+  const old = kind === "old"
   return (
-    <div className={`overflow-hidden rounded-lg border-[3px] border-ink bg-white ${small ? "inline-block" : "block"}`}>
+    <div
+      className={`overflow-hidden rounded-lg border-[3px] ${old ? "border-[#3A3D42] bg-ink text-white" : "border-ink bg-white text-ink"} ${small ? "inline-block" : "block"}`}
+    >
       <div
-        className={`bg-plate text-center font-bold tracking-[0.22em] text-white ${small ? "px-3 py-0.5 text-[11px]" : "py-1 text-[13px]"}`}
+        key={kind}
+        className={`pop-in text-center font-bold tracking-[0.22em] ${old ? "bg-ink text-line" : "bg-plate text-white"} ${small ? "px-3 py-0.5 text-[11px]" : "py-1 text-[13px]"}`}
         aria-hidden="true"
       >
-        REPÚBLICA ARGENTINA
+        {old ? "ARGENTINA" : "REPÚBLICA ARGENTINA"}
       </div>
       {children}
     </div>
@@ -725,27 +751,24 @@ function HomeScreen({
                     Patente del vehículo
                   </label>
                   <motion.div layoutId="plate">
-                  <PlateFrame>
+                  <PlateFrame kind={plate ? plateKind(plate) : "mercosur"}>
                     <input
                       id="plate-input"
                       value={plate}
-                      onChange={(event) =>
-                        setPlate(
-                          event.target.value
-                            .replace(/[^a-zA-Z0-9 ]/g, "")
-                            .toUpperCase()
-                            .slice(0, 9),
-                        )
-                      }
+                      onChange={(event) => setPlate(formatPlate(event.target.value))}
                       placeholder="AB 123 CD"
                       autoComplete="off"
-                      className="plate-input w-full border-0 bg-transparent px-2 py-3 text-center font-mono text-4xl font-bold uppercase tracking-[0.12em] outline-none sm:text-[44px]"
+                      className={`plate-input w-full border-0 bg-transparent px-2 py-3 text-center font-mono text-4xl font-bold uppercase tracking-[0.12em] outline-none sm:text-[44px] ${plate && plateKind(plate) === "old" ? "text-white" : "text-ink"}`}
                       aria-describedby="plate-help"
                     />
                   </PlateFrame>
                   </motion.div>
                   <p id="plate-help" className="mt-2 text-sm text-muted sm:text-base">
-                    Formato Mercosur (AB 123 CD) o anterior (ABC 123).
+                    {plate.replace(/\s/g, "").length >= 3
+                      ? plateKind(plate) === "old"
+                        ? "Patente anterior a 2016 (ABC 123)."
+                        : "Patente Mercosur (AB 123 CD)."
+                      : "Formato Mercosur (AB 123 CD) o anterior (ABC 123)."}
                   </p>
                 </div>
               )}
@@ -1298,7 +1321,7 @@ function ResultsScreen({
             </motion.span>
             <div className="flex min-w-0 flex-col items-start gap-3">
               <motion.div layoutId="plate" className="text-ink">
-                <PlateFrame small>
+                <PlateFrame small kind={plateKind(vehicle.plate)}>
                   <p className="px-4 py-1 text-center font-mono text-2xl font-bold tracking-[0.12em] sm:text-3xl">
                     {vehicle.plate}
                   </p>
