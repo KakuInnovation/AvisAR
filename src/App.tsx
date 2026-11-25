@@ -440,7 +440,7 @@ function NavBar({
     ? ["Soy particular", "home"]
     : ["Soy concesionario o taller", "pro"]
   const linkClass = (active: boolean) =>
-    `min-h-11 cursor-pointer rounded px-3 py-2 text-base font-semibold transition ${
+    `min-h-11 cursor-pointer rounded px-3 py-2 text-base font-semibold transition lg:px-2.5 lg:text-[15px] ${
       active ? "bg-signal text-ink" : "text-white hover:bg-white/10"
     }`
   return (
@@ -638,7 +638,15 @@ function HomeScreen({
       onKeyDownCapture={() => (touched.current = true)}
     >
       <section className="on-dark relative flex flex-col overflow-hidden bg-ink text-white">
-        <div className="relative z-10 mx-auto grid w-full max-w-6xl flex-1 items-center gap-6 px-4 pb-10 pt-6 sm:px-5 lg:grid-cols-[1.05fr_.95fr] lg:gap-12 lg:py-20">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 [background:radial-gradient(55%_70%_at_88%_18%,rgba(255,200,0,0.16),transparent_62%),radial-gradient(45%_60%_at_0%_100%,rgba(255,200,0,0.07),transparent_70%)]"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:linear-gradient(#fff_1px,transparent_1px),linear-gradient(90deg,#fff_1px,transparent_1px)] [background-size:56px_56px] [mask-image:linear-gradient(to_bottom,black,transparent_85%)]"
+        />
+        <div className="relative z-10 mx-auto grid w-full max-w-6xl flex-1 items-center gap-6 px-4 pb-10 pt-6 sm:px-5 lg:grid-cols-[1.05fr_.95fr] lg:gap-14 lg:py-20">
           <div>
             <motion.p
               className="mb-4 inline-flex items-center gap-2 rounded bg-signal px-3 py-1.5 text-sm font-bold uppercase tracking-[0.1em] text-ink lg:mb-6"
@@ -650,7 +658,7 @@ function HomeScreen({
               Antes de comprar un usado
             </motion.p>
             <h1 className="font-display text-[44px] font-extrabold leading-[0.92] sm:text-7xl lg:text-[76px]">
-              <WordReveal text="¿Ese auto tiene un recall sin reparar?" play={intro} delay={0.38} />
+              <WordReveal text="¿Ese auto tiene un recall sin reparar?" highlight={["recall"]} play={intro} delay={0.38} />
             </h1>
             <motion.p
               className="mt-5 hidden max-w-xl text-lg leading-relaxed text-line sm:block"
@@ -662,6 +670,21 @@ function HomeScreen({
               revisión ese modelo, qué riesgo implica y cómo repararlo gratis.
               Te llevás un informe para compartir con el vendedor.
             </motion.p>
+            <motion.ul
+              className="mt-8 hidden flex-wrap gap-x-6 gap-y-3 text-base font-semibold sm:flex"
+              initial={intro ? { opacity: 0 } : false}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.75, duration: 0.3, ease: EASE_OUT }}
+            >
+              {["Gratis y sin registrarte", "Resultado en segundos", "Informe para compartir"].map((item) => (
+                <li key={item} className="flex items-center gap-2">
+                  <span className="flex size-6 items-center justify-center rounded-full bg-signal text-ink" aria-hidden="true">
+                    <Icon name="check" className="size-4" />
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </motion.ul>
           </div>
 
           <motion.div
@@ -670,21 +693,15 @@ function HomeScreen({
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...SPRING_POP, delay: 0.7, opacity: { delay: 0.7, duration: 0.25 } }}
           >
-            <motion.div
-              aria-hidden="true"
-              className="absolute inset-0 rounded-xl bg-signal"
-              initial={intro && !reduce ? { x: 0, y: 0 } : false}
-              animate={{ x: 10, y: 10 }}
-              transition={{ delay: 1.15, duration: 0.3, ease: EASE_OUT }}
-            />
           <form
             onSubmit={(event) => {
               event.preventDefault()
               submit()
             }}
-            className="relative rounded-xl border-[3px] border-ink bg-surface p-4 sm:p-7"
+            className="relative overflow-hidden rounded-2xl bg-surface p-4 pt-6 shadow-[0_30px_80px_-24px_rgba(0,0,0,0.85)] ring-1 ring-white/10 sm:p-8 sm:pt-9"
             aria-labelledby="search-title"
           >
+            <div aria-hidden="true" className="hazard absolute inset-x-0 top-0 !h-2" />
             <div className="flex items-start justify-between gap-3">
               <h2 id="search-title" className="font-display text-[28px] font-extrabold sm:text-3xl">
                 Consultá un vehículo
@@ -926,28 +943,43 @@ function HomeScreen({
                 </span>
               </button>
             </div>
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-sm" role="group" aria-label="Patentes de ejemplo">
+              <span className="hidden text-muted sm:inline">Probá con:</span>
+              {["AB 123 CD", "AD 456 EF", "AA 000 AA"].map((example) => (
+                <button
+                  key={example}
+                  type="button"
+                  onClick={() => {
+                    selectTab("plate")
+                    setPlate(example)
+                  }}
+                  className="min-h-9 cursor-pointer rounded-md border-2 border-line bg-white px-2.5 font-mono font-bold tracking-wide hover:border-ink"
+                >
+                  {example}
+                </button>
+              ))}
+            </div>
             <p className="sr-only" aria-live="polite">
               {loading ? "Consultando fuentes…" : ""}
             </p>
           </form>
           </motion.div>
         </div>
-      </section>
-
-      <section aria-label="Datos de AvisAR" className="border-t-4 border-signal bg-ink text-white">
-        <div className="mx-auto grid max-w-6xl gap-6 px-5 py-8 sm:grid-cols-3">
-          {([
-            [CATALOG.length, "", "modelos del parque real"],
-            [CAMPAIGNS.length, "", "campañas de demostración"],
-            [0, "$", "la consulta y la reparación"],
-          ] as const).map(([number, prefix, label]) => (
-            <div key={label}>
-              <p className="font-display text-6xl font-extrabold text-signal">
-                <CountUp value={number} prefix={prefix} />
-              </p>
-              <p className="mt-1 text-base text-line">{label}</p>
-            </div>
-          ))}
+        <div className="relative z-10 border-t border-white/10 bg-black/20">
+          <dl className="mx-auto grid max-w-6xl grid-cols-3 gap-4 px-4 py-6 sm:px-5 sm:py-8" aria-label="Datos de AvisAR">
+            {([
+              [CATALOG.length, "", "modelos del parque real"],
+              [CAMPAIGNS.length, "", "campañas de demostración"],
+              [0, "$", "la consulta y la reparación"],
+            ] as const).map(([number, prefix, label]) => (
+              <div key={label} className="flex flex-col-reverse gap-1">
+                <dt className="text-sm text-line sm:text-base">{label}</dt>
+                <dd className="font-display text-4xl font-extrabold text-signal sm:text-6xl">
+                  <CountUp value={number} prefix={prefix} />
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 
@@ -960,31 +992,31 @@ function HomeScreen({
         </p>
         <div className="mt-7 grid grid-cols-2 gap-4 md:grid-cols-4">
           {(["sedan", "suv", "pickup", "hatch"] as BodyType[]).map((type, index) => (
-            <InView key={type} delay={index * 0.05} y={24} className="relative">
-              <span aria-hidden="true" className="absolute inset-0 rounded-lg bg-signal" />
+            <InView key={type} delay={index * 0.05} y={24}>
               <motion.button
                 type="button"
                 initial="rest"
                 animate="rest"
                 whileHover={reduce ? undefined : "hover"}
                 whileTap={reduce ? undefined : { scale: 0.97 }}
-                variants={{ rest: { x: 0, y: 0 }, hover: { x: -6, y: -6 } }}
+                variants={{ rest: { y: 0 }, hover: { y: -6 } }}
                 transition={{ duration: 0.2, ease: EASE_OUT }}
                 onClick={() => {
                   selectTab("data")
                   document.getElementById("search-title")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" })
                   window.setTimeout(() => document.getElementById("tab-data")?.focus({ preventScroll: true }), 400)
                 }}
-                className="relative flex w-full cursor-pointer flex-col items-center gap-2 rounded-lg border-[3px] border-ink bg-white p-5 text-ink"
+                className="group relative flex w-full cursor-pointer flex-col items-center gap-3 overflow-hidden rounded-2xl border-2 border-line bg-white p-6 text-graphite shadow-[0_1px_0_rgba(17,18,20,0.04)] transition-[border-color,box-shadow] duration-200 hover:border-ink hover:shadow-[0_18px_40px_-18px_rgba(17,18,20,0.45)]"
               >
+                <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1.5 origin-left scale-x-0 bg-signal transition-transform duration-200 group-hover:scale-x-100" />
                 <motion.span
-                  className="block w-full max-w-44"
+                  className="block w-full max-w-40 group-hover:text-ink"
                   variants={{ rest: { x: 0 }, hover: { x: 8 } }}
                   transition={{ duration: 0.25, ease: EASE_OUT }}
                 >
-                  <CarSilhouette type={type} className="h-16 w-full" />
+                  <CarSilhouette type={type} className="h-14 w-full" />
                 </motion.span>
-                <span className="text-lg font-bold">{BODY_LABEL[type]}</span>
+                <span className="text-lg font-bold text-ink">{BODY_LABEL[type]}</span>
               </motion.button>
             </InView>
           ))}

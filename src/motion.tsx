@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react"
 import {
   animate,
   motion,
@@ -315,7 +315,19 @@ export function HeroCar({ play }: { play: boolean }) {
 }
 
 /** Título que aparece palabra por palabra (clip + subida). */
-export function WordReveal({ text, play, delay = 0.38, className }: { text: string; play: boolean; delay?: number; className?: string }) {
+export function WordReveal({
+  text,
+  play,
+  delay = 0.38,
+  className,
+  highlight = [],
+}: {
+  text: string
+  play: boolean
+  delay?: number
+  className?: string
+  highlight?: string[]
+}) {
   const reduce = useReducedMotion()
   const words = text.split(" ")
   return (
@@ -323,17 +335,19 @@ export function WordReveal({ text, play, delay = 0.38, className }: { text: stri
       <span className="sr-only">{text}</span>
       <span aria-hidden="true">
         {words.map((word, i) => (
-          <span key={i} className="inline-block overflow-hidden pb-[0.08em] align-bottom">
-            <motion.span
-              className="inline-block"
-              initial={play ? (reduce ? { opacity: 0 } : { y: "105%" }) : false}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: delay + i * 0.06, duration: reduce ? 0.2 : 0.45, ease: EASE_OUT }}
-            >
-              {word}
-              {i < words.length - 1 ? " " : ""}
-            </motion.span>
-          </span>
+          <Fragment key={i}>
+            <span className="inline-block overflow-hidden pb-[0.08em] align-bottom">
+              <motion.span
+                className={highlight.includes(word.toLowerCase().replace(/[^a-záéíóúñ]/g, "")) ? "inline-block bg-signal px-[0.12em] text-ink" : "inline-block"}
+                initial={play ? (reduce ? { opacity: 0 } : { y: "105%" }) : false}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: delay + i * 0.06, duration: reduce ? 0.2 : 0.45, ease: EASE_OUT }}
+              >
+                {word}
+              </motion.span>
+            </span>
+            {i < words.length - 1 ? " " : ""}
+          </Fragment>
         ))}
       </span>
     </span>
@@ -405,7 +419,8 @@ function Diamond({ n, active }: { n: number; active: boolean }) {
 
 function StoryScreen({ step, typed }: { step: number; typed: string }) {
   return (
-    <div className="card-signal relative h-[420px] w-full max-w-[460px] overflow-hidden rounded-xl bg-white p-6">
+    <div className="relative h-[420px] w-full max-w-[460px] overflow-hidden rounded-2xl bg-white p-6 pt-8 shadow-[0_30px_70px_-28px_rgba(17,18,20,0.55)] ring-1 ring-ink/10">
+      <div aria-hidden="true" className="hazard absolute inset-x-0 top-0 !h-2" />
       <motion.div animate={{ opacity: step === 0 ? 1 : 0, y: step === 0 ? 0 : -24 }} transition={{ duration: 0.3, ease: EASE_OUT }} className="absolute inset-6">
         <p className="mb-2 text-base font-bold">Patente del vehículo</p>
         <div className="overflow-hidden rounded-lg border-[3px] border-ink">
