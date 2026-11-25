@@ -13,17 +13,24 @@ AvisAR trata de seguridad. El movimiento funciona como la señalética vial: **i
 
 Dos errores, el primero es peor:
 1. **Movimiento que suma alarma o ruido**: parpadeos, sacudidas, pulsos en loop sobre un recall crítico.
-2. **Movimiento genérico**: fade-ins suaves en cada sección, entradas al hacer scroll, parallax decorativo.
+2. **Movimiento genérico o tímido**: fade-ins suaves en cada sección, parallax decorativo, desplazamientos de 4px que nadie nota.
+
+Desde la ronda «expresiva» la portada sí puede tener movimiento con presencia (el título palabra por palabra, el buscador con resorte, el scroll narrado). Juan pidió sacar el auto ilustrado de la portada.
 
 ## Reglas duras
 
 1. **Tokens primero.** Toda duración y curva sale de los tokens. Nunca inventes un valor.
 2. **Solo `transform`, `opacity` y `clip-path`.**
 3. **Reduced motion viene con la animación**, no después.
-4. **Los datos no se mueven por estilo**: patente, VIN, código de campaña, nivel de riesgo, cifras. Pueden aparecer, nunca rebotar, contar hacia arriba ni deslizarse.
+4. **Los datos no se mueven por estilo**: patente, VIN, código de campaña y nivel de riesgo pueden aparecer, nunca rebotar. Excepción: las cifras de la portada y los totales de Talleres cuentan desde 0 **una sola vez** (900ms, ease-out), con el valor final en el DOM para lectores (`aria-hidden` sobre la versión animada).
 5. **La franja de peligro queda quieta.** Animarla (marquesina) la vuelve ruido constante y viola WCAG 2.2.2.
 6. **Nunca más de 3 destellos por segundo** (WCAG 2.3.1). En la práctica: **ningún parpadeo repetido**.
-7. **Nada se repite más de 5 s** sin un control para pausarlo (WCAG 2.2.2). El único loop permitido es el indicador de carga mientras carga.
+7. **Nada se repite más de 5 s** sin un control para pausarlo (WCAG 2.2.2). Las balizas del auto se encienden 2 veces a 2 Hz y quedan fijas; el chequeo de testigos es un único destello.
+8. **La intro de la portada no bloquea**: se reproduce una vez por sesión (`sessionStorage`) y el campo de patente se puede usar desde el ms 0.
+
+## Librería
+
+`motion` (`motion/react`). Piezas reutilizables en `src/motion.tsx`: `HeroRoad`, `HeroCar`, `WordReveal`, `CountUp`, `InView`, `ScrollStory`, `LightCluster`, `Rise`, `PrintIn`, `DrawCheck`, `useIntroOnce`. Resortes: `SPRING_SOFT` (`duration .9, bounce .15`) para el auto y `SPRING_POP` (`duration .6, bounce .2`) para la tarjeta del buscador. Todas usan `useReducedMotion()`.
 
 ## Tokens (`src/index.css`)
 
@@ -44,16 +51,19 @@ Con `prefers-reduced-motion: reduce` se quitan desplazamientos y escalas: queda 
 
 | Elemento | Decisión | Propósito | Receta |
 | --- | --- | --- | --- |
-| Botón primario (amarillo) | Sí, sutil | Feedback | `:active` → `translate(2px,2px)`, `--dur-press` |
-| Pestañas Patente / VIN / Marca | Solo el indicador | Estado | El fondo negro se desplaza con `transform`, `--dur-quick`, `--ease-in-out`. El contenido cambia al instante. |
-| Resultado de la búsqueda | Sí | Evita un cambio brusco | `animate-results-reveal` |
+| Botones | Sí, sutil | Feedback | `scale(0.97)` al presionar, `--dur-press` |
+| Pestañas Patente / VIN / Marca | Solo el indicador | Estado | El fondo negro se desplaza con `transform`, `--dur-quick`, `--ease-in-out` |
+| Intro de la portada | Sí, una vez por sesión | Metáfora | Etiqueta, título palabra por palabra y buscador con resorte; total < 1,6 s (sin auto desde el pedido de Juan) |
+| «Cómo funciona» | Sí, ligado al scroll | Explicar | Sticky 260vh en desktop (`useScroll`); en celular, tarjetas `whileInView` una vez |
+| Cifras de la portada y totales de Talleres | Sí, una vez | Énfasis | Cuentan desde 0 en 900ms |
+| Tarjetas de carrocería | Sí, con puntero | Feedback | Suben 6px, aparece la sombra amarilla y la silueta avanza 8px |
+| Cambio de pantalla | Sí | Continuidad | Entra 260ms (`y 16→0`), sale 160ms (solo opacidad); la patente viaja con `layoutId="plate"`; foco al `h1` al terminar |
+| Carga de búsqueda | Sí | Estado | Testigos que se encienden en secuencia (120ms), una pasada |
+| Resultado | Sí | Evita un cambio brusco | `animate-results-reveal` (tablero) |
 | Banner de riesgo | Sí, una vez | Estado | `animate-alerts` |
-| «Resumen copiado» | Sí | Feedback | Fade + `translateY(4px→0)`, `--dur-quick` |
-| Menú móvil | Sí | Espacial | `clip-path: inset(0 0 100% 0) → inset(0)`, `--dur-enter` |
-| Hover en tarjetas de carrocería | Solo color | Feedback | `background-color`, `--dur-quick`, `ease`, solo con `(hover: hover)` |
-| Franja de peligro, logo, cifras | **No** | | |
-| Secciones de la portada al scrollear | **No** | | Ruido |
-| Navegación entre pantallas | **No** | | Cambio instantáneo + foco al `h1` |
+| Informe | Sí | Feedback | Sale «de la impresora» con `clip-path`; pulso `1→1.02→1` y check dibujado al compartir o copiar |
+| Menú móvil | Sí | Espacial | `clip-path`, `--dur-enter` |
+| Franja de peligro, logo | **No** | | |
 
 ## Checklist
 

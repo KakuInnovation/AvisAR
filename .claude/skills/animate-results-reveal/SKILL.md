@@ -14,7 +14,7 @@ Es el momento más importante de AvisAR. La persona quiere **una respuesta**: ¿
 ## Reglas duras
 
 1. **La respuesta lidera.** Orden de lectura = orden de animación: vehículo → estado → campañas → informe.
-2. **Todo el revelado termina en menos de 500ms.**
+2. **Todo el revelado termina en menos de 900ms** (el estado se lee antes de los 500ms). Desde la ronda expresiva la parte de arriba es un «tablero» oscuro: franja con clip-path → auto con resorte → chequeo de testigos (un destello) → banner → campañas → informe que sale de la impresora. Ver `docs/movimiento.md`.
 3. **Cero layout shift.** Nada empuja contenido después de aparecer.
 4. **El escalonado solo en los primeros 6 elementos** (`--dur-stagger` = 40ms).
 5. **El foco va al `h1` del resultado** (`tabIndex={-1}` + `.focus({ preventScroll: true })`) al montar.
